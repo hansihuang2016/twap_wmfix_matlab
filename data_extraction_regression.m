@@ -1,5 +1,5 @@
-% clear all
-% close all
+clear all
+close all
 
 %This script will extract the CLEANED data downloaded from the Histdata.com
 %database, check for any missing dates or extra dates and adjust as
@@ -30,7 +30,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2013_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2012_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
