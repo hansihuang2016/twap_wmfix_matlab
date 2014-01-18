@@ -46,7 +46,7 @@ datebounds = ftsbound(prices_all_ts,2);
 
 %Extracting the 11am price for each day in the year
 %This is our proxy for the 11am WM Fix
-prices_11am_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
+prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
     datebounds(2,:), [], 1, 'd',{'11:00'});
 
 
@@ -54,9 +54,9 @@ prices_11am_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 10
+starthour = 8
 startminute = 00
-endhour = 11
+endhour = 9
 endminute = 00
 
 starthour = starthour+(startminute/60);
@@ -150,7 +150,7 @@ datevec_equities_prices = datevec(datenums_equities_prices);
 
 %%Now extracting from the 11am prices only the days for which the datenums 
 %%series is the smallest
-prices_11am_ts = prices_11am_ts(datestr(datenums_equities_rtns));
+prices_endhour_ts = prices_endhour_ts(datestr(datenums_equities_rtns));
 
 %Adding a timestamp to the equities time series because Matlab does not
 %behave well without that timestamp...
@@ -224,7 +224,7 @@ prices_hourly_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %%First: Convert to non-FTS object to be able to use the 
 %accumarray() function
 prices_hourly = fts2mat(prices_hourly_ts,1);
-prices_11am = fts2mat(prices_11am_ts,1);
+prices_endhour = fts2mat(prices_endhour_ts,1);
 
 
 
@@ -262,7 +262,7 @@ prices_TWAP = [prices_TWAP_open(:,1:3) TWAPtime prices_TWAP_open(:,4)...
     prices_TWAP_high(:,4) prices_TWAP_low(:,4) prices_TWAP_close(:,4)];
 
 %Adding date+time columns for the 11am price matrix for completeness
-prices_11am = [datevec(prices_11am(:,1)) prices_11am(:,2:5)];
+prices_endhour = [datevec(prices_endhour(:,1)) prices_endhour(:,2:5)];
 
 
 
@@ -275,7 +275,7 @@ clear prices_all time prices_TWAP_open prices_TWAP_high...
 %where necessary
 
 %Create a vector of datenums for the 11am prices
-datenums_11am = getfield(prices_11am_ts,'dates');
+datenums_endhour = getfield(prices_endhour_ts,'dates');
 
 %Create a vector of datenums for the hourly prices
 datenums_TWAP = datenum(prices_TWAP(:,1:3));
@@ -285,8 +285,8 @@ prices_TWAP_ts = fints(datenum(prices_TWAP(:,1:6)),...
     prices_TWAP(:,7:10),fx_names);
 
 
-%Keep only the intersection of the 11am and the TWAP dates
-common_datenums_fx = intersect(datenums_11am,datenums_TWAP,'rows');
+%Keep only the intersection of the end hour and the TWAP dates
+common_datenums_fx = intersect(datenums_endhour,datenums_TWAP,'rows');
 %Keep the intersection of the above, along with the equities dates
 common_datenums_all = intersect(common_datenums_fx, datenums_equities_rtns,...
     'rows');
@@ -294,7 +294,7 @@ common_datenums_all = intersect(common_datenums_fx, datenums_equities_rtns,...
 %Now that we have the common dates, let's make everything match up to those
 %dates
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
-prices_11am_ts = prices_11am_ts(datestr(common_datenums_all));
+prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
 
 returns_equities_adjclose_ts = returns_equities_adjclose_ts(datestr(common_datenums_all));
 returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all));
@@ -302,15 +302,15 @@ returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all)
 prices_equities_adjclose_ts = prices_equities_adjclose_ts(datestr(common_datenums_all));
 prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
 
-% %% Checking to see if extra dates exist in the 11am prices
-% check_missing = ismember(datenums_11am,datenums_TWAP);
-% %If we find extra dates in the 11am prices...
+% %% Checking to see if extra dates exist in the end-hour prices
+% check_missing = ismember(datenums_endhour,datenums_TWAP);
+% %If we find extra dates in the end-hour prices...
 % if (all(check_missing==1,1)==0)
 %     %Identify row where extra dates exist
 %     rowidx_nan = find(check_missing==0);
 %     
 %     %Get the date(s) that is(are) missing
-%     missingdates = datevec(datenums_11am(rowidx_nan));
+%     missingdates = datevec(datenums_endhour(rowidx_nan));
 %     %Add the starting hour time in there
 %     missingdates = [missingdates(:,1:3) repmat([(endhour-1) 59 00],...
 %         size(missingdates,1),1)];
@@ -325,22 +325,22 @@ prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
 %         fx_names);
 %     
 %     %Merging the NaNs with the original TWAP FTS. Now we have a time 
-%     %series that consists of all of the 11am dates (with NaNs where 
+%     %series that consists of all of the end-hour dates (with NaNs where 
 %     %necessary) and more.
 %     prices_TWAP_ts = merge(prices_TWAP_ts, nan_entry_ts);
 % end
 % %% End
 
-% %Extracting only the values for 11am prices from the hourly data (in case 
+% %Extracting only the values for end-hour prices from the hourly data (in case 
 % %some extra dates exist in the hourly data)
-% prices_TWAP_ts = prices_TWAP_ts(datestr(datenums_11am));
+% prices_TWAP_ts = prices_TWAP_ts(datestr(datenums_endhour));
 % 
 % %Converting the TWAPs to matrix in case we need it later on for something
 % prices_TWAP = fts2mat(prices_TWAP_ts,1);
 % prices_TWAP = [datevec(prices_TWAP(:,1)) prices_TWAP(:,2:5)];
 
 %clearing up variables for mem reasons
-clear missingdates datenums_hourly datenums_11am rowidx_nan...
+clear missingdates datenums_hourly datenums_endhour rowidx_nan...
     check_missing nan_entry nan_entry_ts common_datenums
 
 
@@ -377,7 +377,7 @@ clear missingdates datenums_hourly datenums_11am rowidx_nan...
 
 %% Creating the difference between the TWAP and the 11am price
 
-prices_diff_fx_ts = prices_TWAP_ts - prices_11am_ts;
+prices_diff_fx_ts = prices_TWAP_ts - prices_endhour_ts;
 prices_diff_fx = fts2mat(prices_diff_fx_ts);
 
 
@@ -385,7 +385,7 @@ prices_diff_fx = fts2mat(prices_diff_fx_ts);
 %% Converting FTS objects back to non-FTS objects to use in regression
 
 prices_diff_fx = fts2mat(prices_diff_fx_ts);
-prices_11am = fts2mat(prices_11am_ts);
+prices_endhour = fts2mat(prices_endhour_ts);
 prices_TWAP = fts2mat(prices_TWAP_ts);
 
 %Lagging equities adj close by 1 period
@@ -401,13 +401,13 @@ prices_equities_open = fts2mat(prices_equities_open_ts);
 %11am prices to line up previous day equity prices with current day's FX
 prices_equities_adjclose_lagged1 = ...
     prices_equities_adjclose_lagged1(2:size(prices_equities_adjclose_lagged1,1),:);
-prices_11am = prices_11am(1:size(prices_11am,1)-1,:);
+prices_endhour = prices_endhour(1:size(prices_endhour,1)-1,:);
 
 
 
 %% Stepwise regression on Close of 11am FX and Adj Close of equities
 
-reg = stepwiselm(prices_equities_adjclose_lagged1, prices_11am(:,4))
+reg = stepwiselm(prices_equities_adjclose_lagged1, prices_endhour(:,4))
 
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities

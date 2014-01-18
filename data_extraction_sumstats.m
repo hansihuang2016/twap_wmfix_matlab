@@ -19,7 +19,7 @@ yearvector = startyear:endyear;
 
 %Specify start and end hours in 24-hour format
     %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 5
+starthour = 7
 startminute = 00
 endhour = 17
 endminute = 00
