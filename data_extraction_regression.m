@@ -399,6 +399,12 @@ prices_equities_adjclose_lagged1 = ...
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
 
+%lining up the one-period lagged equities and removing the last period of
+%11am prices to line up previous day equity prices with current day's FX
+prices_equities_adjclose_lagged1 = ...
+    prices_equities_adjclose_lagged1(2:size(prices_equities_adjclose_lagged1,1),:);
+prices_11am = prices_11am(1:size(prices_11am,1)-1,:);
+
 
 
 %% Stepwise regression on Close of 11am FX and Adj Close of equities
