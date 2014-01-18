@@ -55,9 +55,9 @@ prices_11am_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
 starthour = 10
-startminute = 00
+startminute = 30
 endhour = 11
-endminute = 00
+endminute = 30
 
 starthour = starthour+(startminute/60);
 endhour = endhour+(endminute/60);
@@ -104,13 +104,7 @@ connect = yahoo
 
     prices_equities_adjclose_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
         names_equities(1));
-    
-    equities_tmp = fetch(connect, tickers_equities(1),'Close',...
-            datebounds(1,:),datebounds(2,:),'d');
-    
-    prices_equities_close_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
-        names_equities(1));    
-
+        
     equities_tmp = fetch(connect, tickers_equities(1),'Open',...
             datebounds(1,:),datebounds(2,:),'d');
     
@@ -132,17 +126,7 @@ connect = yahoo
             names_equities(ii));
         prices_equities_adjclose_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
             'DateSetMethod', 'intersection');
-    
-        %creating a temporary vector for the yahoo download for CLOSE
-        equities_tmp = fetch(connect, tickers_equities(ii),'Close',...
-            datebounds(1,:),datebounds(2,:),'d');        
-        %converting to FTS object
-        equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
-            names_equities(ii));
-        prices_equities_close_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
-            'DateSetMethod', 'intersection');
-    
-    
+        
         %creating a temporary vector for the yahoo download for OPEN
         equities_tmp = fetch(connect, tickers_equities(ii),'Open',...
             datebounds(1,:),datebounds(2,:),'d');        
@@ -154,10 +138,7 @@ connect = yahoo
     end
 close(connect)
 
-prices_equities_diff_ts = prices_equities_close_ts - prices_equities_open_ts;
-
 returns_equities_adjclose_ts = tick2ret(prices_equities_adjclose_ts);
-returns_equities_close_ts = tick2ret(prices_equities_close_ts);
 returns_equities_open_ts = tick2ret(prices_equities_open_ts);
 
 %get the series of the equities datenums
@@ -176,23 +157,17 @@ prices_11am_ts = prices_11am_ts(datestr(datenums_equities_rtns));
 
 %convert to non-FTS object
 returns_equities_adjclose = fts2mat(returns_equities_adjclose_ts);
-returns_equities_close = fts2mat(returns_equities_close_ts);
 returns_equities_open = fts2mat(returns_equities_open_ts);
 
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
-prices_equities_close = fts2mat(prices_equities_close_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
-prices_equities_diff = fts2mat(prices_equities_diff_ts);
 
 %%%%%%%%%%%
 %Take logs of prices to make them comparable to FX data...
 %%%%%%%%%%%%%
 if takelogs == 1
     prices_equities_adjclose = log(prices_equities_adjclose);
-    prices_equities_close = log(prices_equities_close);
     prices_equities_open = log(prices_equities_open);
-    % prices_equities_diff = log(prices_equities_diff); %holding off on this as
-    % the differences might be very small
 end
 
 %create the timestamp
@@ -207,56 +182,30 @@ equitiestime_prices = repmat(time, size(prices_equities_adjclose,1), 1);
 %add the timestamp
 returns_equities_adjclose = [datevec_equities_rtns(:,1:3) equitiestime_rtns ...
     returns_equities_adjclose];
-returns_equities_close = [datevec_equities_rtns(:,1:3) equitiestime_rtns ...
-    returns_equities_close];
 returns_equities_open = [datevec_equities_rtns(:,1:3) equitiestime_rtns ...
     returns_equities_open];
 
 prices_equities_adjclose = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
     prices_equities_adjclose];
-prices_equities_close = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_close];
 prices_equities_open = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
     prices_equities_open];
-prices_equities_diff = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_diff];
 
 %reconvert to time series object
 prices_equities_adjclose_ts = fints(datenum(prices_equities_adjclose(:,1:6)),...
     prices_equities_adjclose(:,7:size(prices_equities_adjclose,2)), names_equities);
-prices_equities_close_ts = fints(datenum(prices_equities_close(:,1:6)),...
-    prices_equities_close(:,7:size(prices_equities_close,2)), names_equities);
 prices_equities_open_ts = fints(datenum(prices_equities_open(:,1:6)),...
     prices_equities_open(:,7:size(prices_equities_open,2)), names_equities);
-prices_equities_diff_ts = fints(datenum(prices_equities_diff(:,1:6)),...
-    prices_equities_diff(:,7:size(prices_equities_diff,2)), names_equities);
 
 returns_equities_adjclose_ts = fints(datenum(returns_equities_adjclose(:,1:6)),...
     returns_equities_adjclose(:,7:size(returns_equities_adjclose,2)), names_equities);
-returns_equities_close_ts = fints(datenum(returns_equities_close(:,1:6)),...
-    returns_equities_close(:,7:size(returns_equities_close,2)), names_equities);
 returns_equities_open_ts = fints(datenum(returns_equities_open(:,1:6)),...
     returns_equities_open(:,7:size(returns_equities_open,2)), names_equities);
 
-%Now remove the date and time stamp on the non-FTS objects so we can use
-%them in the regression or other things
-returns_equities_adjclose = returns_equities_adjclose(:,...
-    7:size(returns_equities_adjclose,2));
-returns_equities_close = returns_equities_close(:,...
-    7:size(returns_equities_close,2));
-returns_equities_open = returns_equities_open(:,...
-    7:size(returns_equities_open,2));
-
-prices_equities_adjclose = prices_equities_adjclose(:,...
-    7:size(prices_equities_adjclose,2));
-prices_equities_close = prices_equities_close(:,...
-    7:size(prices_equities_close,2));
-prices_equities_open = prices_equities_open(:,...
-    7:size(prices_equities_open,2));
-
 
 clear connect equities_tmp equities_tmp_ts ii equitiestime...
-    datevec_equities
+    datevec_equities prices_equities_adjclose prices_equities_close...
+    prices_equities_open prices_equities_diff returns_equities_adjclose...
+    returns_equities_close returns_equities_open
 
 
 
@@ -348,13 +297,10 @@ prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
 prices_11am_ts = prices_11am_ts(datestr(common_datenums_all));
 
 returns_equities_adjclose_ts = returns_equities_adjclose_ts(datestr(common_datenums_all));
-returns_equities_close_ts = returns_equities_close_ts(datestr(common_datenums_all));
 returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all));
 
 prices_equities_adjclose_ts = prices_equities_adjclose_ts(datestr(common_datenums_all));
-prices_equities_close_ts = prices_equities_close_ts(datestr(common_datenums_all));
 prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
-prices_equities_diff_ts = prices_equities_diff_ts(datestr(common_datenums_all));
 
 % %% Checking to see if extra dates exist in the 11am prices
 % check_missing = ismember(datenums_11am,datenums_TWAP);
@@ -438,6 +384,29 @@ prices_diff_fx = fts2mat(prices_diff_fx_ts);
 prices_diff_equities = fts2mat(prices_diff_equities_ts);
 
 
-%% Stepwise regression on Close of (TWAP - 10am) and Close of equities
-% stepwiselm(prices_equities, prices_diff(:,4))
+%% Converting FTS objects back to non-FTS objects to use in regression
+
+prices_diff_fx = fts2mat(prices_diff_fx_ts);
+prices_11am = fts2mat(prices_11am_ts);
+prices_TWAP = fts2mat(prices_TWAP_ts);
+
+%Lagging equities adj close by 1 period
+prices_equities_adjclose_ts_lagged1 = ...
+    lagts(prices_equities_adjclose_ts,1,NaN);
+prices_equities_adjclose_lagged1 = ...
+    fts2mat(prices_equities_adjclose_ts_lagged1);
+
+prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
+prices_equities_open = fts2mat(prices_equities_open_ts);
+
+
+
+%% Stepwise regression on Close of 11am FX and Adj Close of equities
+
+stepwiselm(prices_equities_adjclose, prices_11am(:,4))
+
+%% Linear multivariate regression on Close of 11am FX and Adj Close 
+% of equities
+
+% fitlm(prices_equities, prices_11am(:,4))
 
