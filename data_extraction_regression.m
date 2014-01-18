@@ -55,9 +55,9 @@ prices_11am_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
 starthour = 10
-startminute = 30
+startminute = 00
 endhour = 11
-endminute = 30
+endminute = 00
 
 starthour = starthour+(startminute/60);
 endhour = endhour+(endminute/60);
@@ -378,10 +378,8 @@ clear missingdates datenums_hourly datenums_11am rowidx_nan...
 %% Creating the difference between the TWAP and the 11am price
 
 prices_diff_fx_ts = prices_TWAP_ts - prices_11am_ts;
-prices_diff_equities_ts = prices_equities_close_ts - prices_equities_open_ts;
-
 prices_diff_fx = fts2mat(prices_diff_fx_ts);
-prices_diff_equities = fts2mat(prices_diff_equities_ts);
+
 
 
 %% Converting FTS objects back to non-FTS objects to use in regression
@@ -409,7 +407,7 @@ prices_11am = prices_11am(1:size(prices_11am,1)-1,:);
 
 %% Stepwise regression on Close of 11am FX and Adj Close of equities
 
-stepwiselm(prices_equities_adjclose, prices_11am(:,4))
+reg = stepwiselm(prices_equities_adjclose_lagged1, prices_11am(:,4))
 
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities
