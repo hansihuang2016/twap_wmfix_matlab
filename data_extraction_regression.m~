@@ -57,9 +57,9 @@ prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 10
+starthour = 8
 startminute = 00
-endhour = 11
+endhour = 9
 endminute = 00
 
 starthour = starthour+(startminute/60);
@@ -67,12 +67,8 @@ endhour = endhour+(endminute/60);
 
 %Extracting the 11am price for each day in the year
 %This is our proxy for the 11am WM Fix
-dv = cellstr(datestr(endhour/24:1/60/24:endhour/24));
 prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
-    datebounds(2,:), [], 1, 'd',dv);
-
-% prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
-%     datebounds(2,:), [], 1, 'd',{'11:00'});
+    datebounds(2,:), [], 1, 'd',{'11:00'});
 
 
 
@@ -221,9 +217,9 @@ clear connect equities_tmp equities_tmp_ts ii equitiestime...
 
 
 
-%% Moving on to the FX stuff now: extract relevant data
+%% Extract relevant data
 
-%Create vector of times and extract all prices from
+%Create vector of times and extract all prices from 
 %starthour to starthour + 59mins daily
 dv = cellstr(datestr(starthour/24:1/60/24:endhour/24-1/60/24));
 prices_hourly_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
@@ -425,13 +421,11 @@ if lagreg == 1
     prices_TWAP = prices_TWAP(1:size(prices_TWAP,1)-1,:);
     
     %running the regression
-    reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
-        prices_lagged_endhour(:,4), ...
-        'VarNames',[names_equities '11amprices'])
-%     reg2 = stepwiselm(prices_equities_adjclose_lagged1, prices_TWAP(:,4))
+    reg1 = stepwiselm(prices_equities_adjclose_lagged1, prices_lagged_endhour(:,4))
+    reg2 = stepwiselm(prices_equities_adjclose_lagged1, prices_TWAP(:,4))
 else
     reg1 = stepwiselm(prices_equities_adjclose, prices_endhour(:,4))
-%     reg2 = stepwiselm(prices_equities_adjclose, prices_TWAP(:,4))
+    reg2 = stepwiselm(prices_equities_adjclose, prices_TWAP(:,4))
 end    
     
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
