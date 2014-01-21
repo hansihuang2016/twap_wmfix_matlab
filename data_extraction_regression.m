@@ -27,7 +27,7 @@ workingdir = ...
 
 %% Do you want to take logs of equity prices?
 
-takelogs = 1 %1 = yes; 0 = no
+takelogs = 0 %1 = yes; 0 = no
 
 %% Do you want to run a lagged regression?
 
@@ -59,19 +59,26 @@ prices_all_ts = fints(datenum(prices_all(:,1:6)),prices_all(:,7:10),fx_names);
 %Extract start and end dates
 datebounds = ftsbound(prices_all_ts,2);
 
-%Extracting the end-hour price for each day in the year
+%Extracting the end-hour and start-hour price for each day in the year
+
+%Doing it for the end-hour first
 %If the end-hour is 11am, this is our proxy for the 11am WM Fix
 dv = cellstr(datestr(endhour/24:1/60/24:endhour/24));
 prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
+    datebounds(2,:), [], 1, 'd',dv);
+
+%Doing it for the start-hour
+dv = cellstr(datestr(starthour/24:1/60/24:starthour/24));
+prices_starthour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
     datebounds(2,:), [], 1, 'd',dv);
 
 % prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %     datebounds(2,:), [], 1, 'd',{'11:00'});
 
 
-
-%% Download equities data to get trading dates for equities. We will use 
-%these to get the dates for our FX data
+%% THIS IS ALL THE EQUITIES STUFF NOW
+%% Download equities data to get trading dates for equities. 
+%   We will use these to get the dates for our FX data
 
 tickers_americas = {'^MERV', '^MXX', '^BVSP', '^GSPTSE', '^GSPC', 'DOW',...
     '^RUT'};
@@ -203,7 +210,7 @@ clear connect equities_tmp equities_tmp_ts ii equitiestime...
 
 
 
-%% Moving on to the FX stuff now
+%% MOVING BACK TO THE FX STUFF NOW
 %% First, extract relevant data
 
 %Create vector of times and extract all prices from
@@ -268,10 +275,10 @@ clear prices_all time prices_TWAP_open prices_TWAP_high...
 
 %% Third, merge all data series based on dates where necessary
 
-%Create a vector of datenums for the 11am prices
+%Create a vector of datenums for the end-hour prices
 datenums_endhour = getfield(prices_endhour_ts,'dates');
 
-%Create a vector of datenums for the hourly prices
+%Create a vector of datenums for the TWAP prices
 datenums_TWAP = datenum(prices_TWAP(:,1:3));
 
 %Converting the hourly TWAPs to FTS object
@@ -289,6 +296,7 @@ common_datenums_all = intersect(common_datenums_fx, datenums_equities_rtns,...
 %dates
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
 prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
+prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
 
 returns_equities_adjclose_ts = returns_equities_adjclose_ts(datestr(common_datenums_all));
 returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all));
@@ -309,7 +317,10 @@ prices_diff_fx = fts2mat(prices_diff_fx_ts);
 
 prices_diff_fx = fts2mat(prices_diff_fx_ts);
 prices_endhour = fts2mat(prices_endhour_ts);
+prices_starthour = fts2mat(prices_starthour_ts);
 prices_TWAP = fts2mat(prices_TWAP_ts);
+
+%% Doing the lagging and lining up of variables
 
 %Lagging equities adj close by 1 period
 prices_equities_adjclose_ts_lagged1 = ...
@@ -317,30 +328,42 @@ prices_equities_adjclose_ts_lagged1 = ...
 prices_equities_adjclose_lagged1 = ...
     fts2mat(prices_equities_adjclose_ts_lagged1);
 
+%lining up the one-period lagged equities and removing the last period 
+%of end-hour prices to line up previous day equity prices with current 
+%day's FX values
+
+%removing the first 'NaN' value in the lagged equities data
+prices_equities_adjclose_lagged1 = ...
+    prices_equities_adjclose_lagged1(2:size(prices_equities_adjclose_lagged1,1),:);
+
+%removing the last day of the year for the FX values
+prices_lagged_endhour = prices_endhour(1:size(prices_endhour,1)-1,:);
+prices_lagged_TWAP = prices_TWAP(1:size(prices_TWAP,1)-1,:);
+prices_lagged_diff_fx = prices_diff_fx(1:size(prices_diff_fx,1)-1,:);
+prices_lagged_starthour = prices_starthour(1:size(prices_starthour,1)-1,:);
+
+
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
 
 %% Stepwise regression on Close of End-Hour FX and Adj Close of equities
 
 if lagreg == 1
-    %lining up the one-period lagged equities and removing the last period 
-    %of end-hour prices to line up previous day equity prices with current 
-    %day's FX values
-    
-    %removing the first 'NaN' value in the lagged equities data
-    prices_equities_adjclose_lagged1 = ...
-        prices_equities_adjclose_lagged1(2:size(prices_equities_adjclose_lagged1,1),:);
-    
-    %removing the last day of the year for the FX values
-    prices_lagged_endhour = prices_endhour(1:size(prices_endhour,1)-1,:);
-    prices_TWAP = prices_TWAP(1:size(prices_TWAP,1)-1,:);
-    
-    %running the regression
-    reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
-        prices_lagged_endhour(:,4), ...
-        'VarNames',[names_equities '11amprices'])
-%     reg2 = stepwiselm(prices_equities_adjclose_lagged1, prices_TWAP(:,4))
+    %running the regression on lagged equity/unlagged FX
+%     reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
+%         prices_lagged_endhour(:,4), ...
+%         'VarNames',[names_equities 'EndHourPrices'])
+%     reg2 = stepwiselm(prices_equities_adjclose_lagged1, ...
+%        prices_lagged_TWAP(:,4))
+%     reg3 = stepwiselm(prices_equities_adjclose_lagged1, ...
+%             prices_lagged_diff_fx(:,4), ...
+%             'VarNames',[names_equities '11amMinusTWAP'])
+    reg4 = stepwiselm(prices_equities_adjclose_lagged1, ...
+        prices_lagged_starthour(:,4), ...
+        'VarNames',[names_equities 'StartHourPrices'])
+
 else
+    %running regression on unlagged equity/unlagged FX
     reg1 = stepwiselm(prices_equities_adjclose, prices_endhour(:,4))
 %     reg2 = stepwiselm(prices_equities_adjclose, prices_TWAP(:,4))
 end    
