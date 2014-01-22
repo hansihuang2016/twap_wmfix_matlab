@@ -1,0 +1,12 @@
+1/21/14
+
+Worked on model and realized that Matlab is terrible with multiple regression. It has no diagnostic tools especially for multicollinearity and heteroscedasticity. 
+
+To test of multicollinearity, you can look at the correlation matrix which tells you something, but not everything. Variance inflation factors (VIFs) are more accurate supposedly, and you can use the correlation matrix to calculate VIFs: inv(correlation matrix^Transpose) [I believe] gives you the VIFS for each indep var. A value around 10 or more indicates multicollinearity. All my indep vars results in values that were in their 20s!! So need to confirm this.
+
+To do that I need the matrix of indep vars used in the stepwise reg. How do I create a matrix of said variables? Matlab does not allow you to do that in one step!!
+
+Possible solutions:
+(1) Create a database from the equities data
+(2) Create individual series of each equity so I can add/drop and create interaction terms if necessary -- this might be more effective, but a lot more work.
+(3) ...?
