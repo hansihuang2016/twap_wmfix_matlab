@@ -1,6 +1,11 @@
+
+GOAL: To come up with a trading strategy using the relationship between FX rates and global stock index prices.
+
 1/21/14
 
 Worked on model and realized that Matlab is terrible with multiple regression. It has no diagnostic tools especially for multicollinearity and heteroscedasticity. 
+
+*I checked visually for normality, serial correlation and heteroscedasticity and could not see anything.* [fairly confident about this but never know for sure...]
 
 To test of multicollinearity, you can look at the correlation matrix which tells you something, but not everything. Variance inflation factors (VIFs) are more accurate supposedly, and you can use the correlation matrix to calculate VIFs: inv(correlation matrix^Transpose) [I believe] gives you the VIFS for each indep var. A value around 10 or more indicates multicollinearity. All my indep vars results in values that were in their 20s!! So need to confirm this.
 
