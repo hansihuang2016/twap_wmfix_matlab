@@ -12,7 +12,7 @@ fx_names = {'Open'; 'High'; 'Low'; 'Close'};
     
 currency = 'EURUSD' %ALLCAPS please
 
-startyear = 2013
+startyear = 2010
 endyear = 2013
 
 yearvector = startyear:endyear;
@@ -27,7 +27,7 @@ endminute = 00
 starthour = starthour+(startminute/60);
 endhour = endhour+(endminute/60);
 
-increments = (10/60)
+increments = (5/60)
 
 hourvector = starthour:increments:endhour;
 

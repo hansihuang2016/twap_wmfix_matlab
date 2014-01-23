@@ -1,7 +1,9 @@
 
 GOAL: To come up with a trading strategy using the relationship between FX rates and global stock index prices.
 
-1/21/14
+***********
+* 1/21/14 *
+***********
 
 Worked on model and realized that Matlab is terrible with multiple regression. It has no diagnostic tools especially for multicollinearity and heteroscedasticity. 
 
@@ -16,9 +18,35 @@ Possible solutions:
 (2) Create individual series of each equity so I can add/drop and create interaction terms if necessary -- this might be more effective, but a lot more work.
 (3) ...?
 
-1/22/14
+***********
+* 1/22/14 *
+***********
 
 Starting to split up the data extraction and download files with the regression analysis so I can run repeated regressions without having to keep downloading the data. Need to finish this tomorrow.
 
 Also plan to create an individual series of equity index data so that I can play around with it more. Will do this tomorrow.
 
+***********
+* 1/23/14 *
+***********
+
+Split up the data extraction and analysis.
+
+Also figured out a way to extract the series of predictors from the entire series of equities. 
+
+Still have to figure out a way to get the interaction variables.
+
+Today, I looked at the summary stats over the last 5-6 years (2007-13). I looked at:
+(1) each individual years as well as
+(2A) averages across all the years as well as 
+(2B) a subset of the years.
+
+Looking at the data one can see a few things very clearly:
+
+(1) There are clear patterns in the data through the day.
+(2) Trades cluster around the hour.
+	2A. For years before the crisis (basically 2007) and for years well after the crisis (2012/13), there are patterns within the hour, i.e., the prices start low and increase over the hour.
+	2B. For the crisis years, these patterns seem to be there, but not as distinct.
+(3) No real consistent patterns across the years in skewness, kurtosis or standard deviation.
+
+IMPORTANT: Based off of DeRosa's "4-pip" rule, there seems to be a basic strategy of buying in the morning and selling in the afternoon that *could* potentially lead to a gain of four pips...

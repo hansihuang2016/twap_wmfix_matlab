@@ -16,12 +16,17 @@ takelogs = 0 %1 = yes; 0 = no
 
 lagreg = 1 %1 = yes; 0 = no
 
-%% Specify start-hour here
+%% Do you want to calculate the TWAP between the start- and the end-hour?
+
+twapdecision = 0 %1 = yes; 0 = no
+
+%% Specify start- and end-hour here
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
 starthour = 11
 startminute = 00
+
 endhour = 12
 endminute = 00
 
@@ -127,14 +132,89 @@ clear datevec_equities prices_equities_adjclose prices_equities_close...
     prices_equities_open prices_equities_diff returns_equities_adjclose...
     returns_equities_close returns_equities_open
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% CALCULATING THE TWAP HERE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if twapdecision == 1
+    
+    %Create vector of times and extract all prices from
+    %starthour to starthour + 59mins daily
+    dv = cellstr(datestr(starthour/24:1/60/24:endhour/24-1/60/24));
+    prices_hourly_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
+        datebounds(2,:), [], 1, 'd',dv);
+
+    %% Calculating the TWAP between start-hour and end-hour
+
+    %%FIRST: Convert to non-FTS object to be able to use the 
+    %accumarray() function
+    prices_hourly = fts2mat(prices_hourly_ts,1);
+    prices_endhour = fts2mat(prices_endhour_ts,1);
+
+    %%SECOND: Get a matrix of datevectors in the form [y, m, d, h, m, s] to use
+    %%to use the unique() function and get a unique date for each time period.
+    %%In other words, there will be a unique value for each set of values
+    %%from 10:00 to 10:59am, 9:00 to 9:59am, and so on...
+    dates_hourly = datevec(prices_hourly(:,1));
+
+    %Now get the unique dates using the unique() function so that we can 
+    %eventually get the TWAP for each of those dates
+    [uniquedates_hourly, ~, subs_hourly]    = ...
+        unique(dates_hourly(:,1:3),'rows');
+
+    %%THIRD: Calculate the TWAP for each date using the accumarray() function
+    %Doing it by column (open, high, low close) 
+    prices_TWAP_open = [uniquedates_hourly accumarray(subs_hourly, ...
+        prices_hourly(:,2), [], @mean)];
+    prices_TWAP_high = [uniquedates_hourly accumarray(subs_hourly, ...
+        prices_hourly(:,3), [], @mean)];
+    prices_TWAP_low = [uniquedates_hourly accumarray(subs_hourly, ...
+        prices_hourly(:,4), [], @mean)];
+    prices_TWAP_close = [uniquedates_hourly accumarray(subs_hourly, ....
+        prices_hourly(:,5), [], @mean)];
+
+    %%FOURTH: We have to add a time column as we have an average per date
+    %We are doing this because once we convert it back to a FTS object we will
+    %need an identifier for each time
+    TWAPtime = repmat(time, size(prices_TWAP_open,1), 1);
+    prices_TWAP = [prices_TWAP_open(:,1:3) TWAPtime prices_TWAP_open(:,4)...
+        prices_TWAP_high(:,4) prices_TWAP_low(:,4) prices_TWAP_close(:,4)];
+
+    %Adding date+time columns for the end-hour price matrix for completeness
+    prices_endhour = [datevec(prices_endhour(:,1)) prices_endhour(:,2:5)];
+
+    %clearing up variables for mem reasons
+    clear prices_all time prices_TWAP_open prices_TWAP_high...
+        prices_TWAP_low prices_TWAP_close subs_hourly dv dates_hourly TWAPtime
+
+    %%FIFTH: Merge all data series based on dates where necessary
+
+    %Create a vector of datenums for the start- and end-hour prices
+    datenums_endhour = getfield(prices_endhour_ts,'dates');
+    datenums_starthour = getfield(prices_starthour_ts,'dates');
+    
+    %Create a vector of datenums for the TWAP prices
+    datenums_TWAP = datenum(prices_TWAP(:,1:3));
+    
+    %Merge all the datenums
+    datenums_fx = intersect(datenums_endhour, datenums_starthour, ...
+        datenums_TWAP, 'rows');    
+
+    %Converting the hourly TWAPs to FTS object
+    prices_TWAP_ts = fints(datenum(prices_TWAP(:,1:6)), ...
+        prices_TWAP(:,7:10),fx_names);
+    
+else
+    %% Create a vector of datenums for the end-hour prices
+    
+    %This is all we need to do if we are not calculating the TWAP
+    datenums_endhour = getfield(prices_endhour_ts,'dates');
+    datenums_starthour = getfield(prices_starthour_ts,'dates');
+    datenums_fx = intersect(datenums_endhour, datenums_starthour, 'rows');
+end
+
 %% Merge all data series based on dates where necessary
 
-%Create a vector of datenums for the end-hour prices
-datenums_endhour = getfield(prices_endhour_ts,'dates');
-datenums_starthour = getfield(prices_starthour_ts,'dates');
-datenums_fx = intersect(datenums_endhour, datenums_starthour, 'rows');
-
-%Keep the intersection of the above, along with the equities dates
+%Keep the intersection of all the fx and the equities dates
 common_datenums_all = intersect(datenums_fx, datenums_equities_prices,...
     'rows');
 
@@ -197,7 +277,10 @@ if lagreg == 1
 else
     %running regression on unlagged equity/unlagged FX
     reg1 = stepwiselm(prices_equities_adjclose, prices_endhour(:,4))
-end    
+end
+
+predictors = extfield(prices_equities_adjclose_ts_lagged1, ...
+    reg1.PredictorNames);
     
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities
