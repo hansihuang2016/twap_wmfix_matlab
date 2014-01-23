@@ -3,6 +3,10 @@ clear all
 close all
 
 load prices_all_ts.mat
+load prices_equities_open_ts.mat
+load prices_equities_adjclose_ts.mat
+
+
 
 %% Do you want to take logs of equity prices?
 
@@ -23,6 +27,10 @@ endminute = 00
 
 starthour = starthour+(startminute/60);
 endhour = endhour+(endminute/60);
+
+%Extract start and end dates for equities extraction
+datebounds = ftsbound(prices_all_ts,2);
+
 
 %% Start data extraction for FX
 
@@ -50,6 +58,9 @@ datebounds = ftsbound(prices_all_ts,2);
 
 returns_equities_adjclose_ts = tick2ret(prices_equities_adjclose_ts);
 returns_equities_open_ts = tick2ret(prices_equities_open_ts);
+
+%get the equity index names
+names_equities = fieldnames(prices_equities_adjclose_ts,1);
 
 %get the series of the equities datenums
 datenums_equities_rtns = getfield(returns_equities_adjclose_ts,'dates');
@@ -116,10 +127,34 @@ clear datevec_equities prices_equities_adjclose prices_equities_close...
     prices_equities_open prices_equities_diff returns_equities_adjclose...
     returns_equities_close returns_equities_open
 
+%% Merge all data series based on dates where necessary
 
+%Create a vector of datenums for the end-hour prices
+datenums_endhour = getfield(prices_endhour_ts,'dates');
+datenums_starthour = getfield(prices_starthour_ts,'dates');
+datenums_fx = intersect(datenums_endhour, datenums_starthour, 'rows');
 
+%Keep the intersection of the above, along with the equities dates
+common_datenums_all = intersect(datenums_fx, datenums_equities_prices,...
+    'rows');
 
-%% Converting FTS objects back to non-FTS objects to use in regression
+%Now that we have the common dates, let's make everything match up to those
+%dates
+prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
+prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
+
+returns_equities_adjclose_ts = returns_equities_adjclose_ts(datestr(common_datenums_all));
+returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all));
+
+prices_equities_adjclose_ts = prices_equities_adjclose_ts(datestr(common_datenums_all));
+prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
+
+%clearing up variables for mem reasons
+clear missingdates datenums_hourly datenums_endhour rowidx_nan...
+    check_missing nan_entry nan_entry_ts common_datenums datenums_starthour...
+    datenums_equities_prices datenums_equities_rtns
+
+%% Converting FX FTS objects back to non-FTS objects to use in regression
 
 prices_endhour = fts2mat(prices_endhour_ts);
 prices_starthour = fts2mat(prices_starthour_ts);
@@ -154,7 +189,7 @@ if lagreg == 1
     %running the regression on lagged equity/unlagged FX
     reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
         prices_lagged_endhour(:,4), ...
-        'VarNames',[names_equities 'EndHourPrices'])
+        'VarNames',[names_equities' 'EndHourPrices'])
 %     reg4 = stepwiselm(prices_equities_adjclose_lagged1, ...
 %         prices_lagged_starthour(:,4), ...
 %         'VarNames',[names_equities 'StartHourPrices'])

@@ -12,9 +12,6 @@ close all
 %
 %(2) For missing data 'NaN's are added in. We can perform linear
 %interpolation (or any other operation) on missing data if necessary.
-%
-%(3) The data from Yahoo! should already exist in the workspace. Make sure
-%you run yahoo_dat BEFORE you run this code.
 
 
 
@@ -38,7 +35,7 @@ save prices_all_ts.mat prices_all_ts
 %Extract start and end dates for equities extraction
 datebounds = ftsbound(prices_all_ts,2);
 
-%% THIS IS ALL THE EQUITIES STUFF NOW
+%% MOVING ON TO THE EQUITIES STUFF NOW
 %% Download equities data to get trading dates for equities. 
 %   We will use these to get the dates for our FX data
 
@@ -105,29 +102,6 @@ save prices_equities_open_ts.mat prices_equities_open_ts
 save prices_equities_adjclose_ts.mat prices_equities_adjclose_ts
 
 
-%% Merge all data series based on dates where necessary
-
-%Create a vector of datenums for the end-hour prices
-datenums_endhour = getfield(prices_endhour_ts,'dates');
-
-%Keep the intersection of the above, along with the equities dates
-common_datenums_all = intersect(common_datenums_fx, datenums_equities_rtns,...
-    'rows');
-
-%Now that we have the common dates, let's make everything match up to those
-%dates
-prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
-prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
-
-returns_equities_adjclose_ts = returns_equities_adjclose_ts(datestr(common_datenums_all));
-returns_equities_open_ts = returns_equities_open_ts(datestr(common_datenums_all));
-
-prices_equities_adjclose_ts = prices_equities_adjclose_ts(datestr(common_datenums_all));
-prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
-
-%clearing up variables for mem reasons
-clear missingdates datenums_hourly datenums_endhour rowidx_nan...
-    check_missing nan_entry nan_entry_ts common_datenums
 
 
 

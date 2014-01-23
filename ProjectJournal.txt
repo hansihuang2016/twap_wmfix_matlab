@@ -15,3 +15,10 @@ Possible solutions:
 (1) Create a database from the equities data
 (2) Create individual series of each equity so I can add/drop and create interaction terms if necessary -- this might be more effective, but a lot more work.
 (3) ...?
+
+1/22/14
+
+Starting to split up the data extraction and download files with the regression analysis so I can run repeated regressions without having to keep downloading the data. Need to finish this tomorrow.
+
+Also plan to create an individual series of equity index data so that I can play around with it more. Will do this tomorrow.
+
