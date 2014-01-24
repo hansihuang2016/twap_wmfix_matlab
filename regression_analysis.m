@@ -14,7 +14,7 @@ takelogs = 0 %1 = yes; 0 = no
 
 %% Do you want to run a lagged regression?
 
-lagreg = 1 %1 = yes; 0 = no
+lagdecision = 1 %1 = yes; 0 = no
 
 %% Do you want to calculate the TWAP between the start- and the end-hour?
 
@@ -24,7 +24,7 @@ twapdecision = 0 %1 = yes; 0 = no
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 11
+starthour = 10
 startminute = 00
 
 endhour = 12
@@ -265,7 +265,7 @@ prices_equities_open = fts2mat(prices_equities_open_ts);
 
 %% Stepwise regression on Close of End-Hour FX and Adj Close of equities
 
-if lagreg == 1
+if lagdecision == 1
     %running the regression on lagged equity/unlagged FX
     reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
         prices_lagged_endhour(:,4), ...
@@ -281,6 +281,11 @@ end
 
 predictors = extfield(prices_equities_adjclose_ts_lagged1, ...
     reg1.PredictorNames);
+
+coeff_names = reg1.CoefficentNames;
+
+for jj = 1:size(coeff_names,2)
+    if strfind(coeff_names(jj),)
     
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities

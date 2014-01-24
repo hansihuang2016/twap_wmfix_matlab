@@ -36,6 +36,8 @@ Also figured out a way to extract the series of predictors from the entire serie
 
 Still have to figure out a way to get the interaction variables.
 
+--- LOOKED AT SOMETHING ELSE -----
+
 Today, I looked at the summary stats over the last 5-6 years (2007-13). I looked at:
 (1) each individual years as well as
 (2A) averages across all the years as well as 
@@ -50,3 +52,15 @@ Looking at the data one can see a few things very clearly:
 (3) No real consistent patterns across the years in skewness, kurtosis or standard deviation.
 
 IMPORTANT: Based off of DeRosa's "4-pip" rule, there seems to be a basic strategy of buying in the morning and selling in the afternoon that *could* potentially lead to a gain of four pips...
+
+---- END OF SOMETHING ELSE ----
+
+Back to the: Still have to figure out a way to get the interaction variables.
+
+Found a way to get all of the regression variables, including the interaction ones. That array has a colon (':') for all interaction variables. 
+
+I am using Matlab's strfind() function to find the ':' in each of the cells to locate the interaction variables. 
+
+I plan to split up the interaction variables based off of the colon, and then use the Time Series object functions to extract the necessary time series and multiply them with each other.
+
+Pick it up again tomorrow...
