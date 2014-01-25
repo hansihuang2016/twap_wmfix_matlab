@@ -143,3 +143,47 @@ It turns out that on visual inspection, both the prices_endhour AND the predicto
 
 GOOD NEWS however, is the the Augmented Dickey Fuller tests on each of the predictors gives 1 [assuming this is reject the null that unit root exists...? need to double-check]
 
+----------------END SPURIOUS REGRESSION---------------
+
+Pick it up again tomorrow.
+
+*************
+* 1/25/2014 *
+*************
+
+So I double-checked the ADF test and also did another test (the KPSS test) on our predictors from 2007, and they were terrible. All 13 predictors failed both, unit root and stationarity tests.
+
+I then tested for stationarity on first differences and that was better. All first-differenced predictors were free of both unit roots and nonstationarity.
+
+NEXT STEP: Rerun the regression on first-differenced data. Do a stepwise regression on first-differenced equities data.
+
+
+I also tested for heteroskedasticity using archtest() on the raw residuals and they failed.
+
+
+I also tested for autocorrelation in the residuals and it is 1 (????!!!!). Need to somehow deal with this as well.
+
+I am going through the Matlab linear regression example and it is very descriptive and describes all the issues and how one can deal with them.
+
+NEXT STEPS:
+-----------
+Plan to convert the data into a dataset so I don't keep having to adjust it for lags and first-differencing (hopefully). Since you cannot run a regression on a time series object, I plan to convert the TS object to a data set array (DS array).
+
+Once you convert to DS, you can take lags and first-difference away to glory. You can do this on both the dep var and the indep vars.
+
+Also need to go over the CFA stuff on dealing with serial correlation (autocorrelation in the residuals) and figuring out how much to lag the indep vars based off of the autocorrelations of the resids.
+
+At the end of this, I would like a step-by-step process so I can:
+
+(1) Rerun the regression on any subsample of the data 
+(2) Go through each of the tests (e.g., unit root, stationarity of indep vars; normality, independence and homoskedasticity of resids, etc.)
+(3) Correct for any issues and rerun the regression
+(4) Get a reasonable regression which I can use for prediction purposes.
+
+At first, you should correct for autocorrelation in the resids by lagging the indep vars. Instead of taking the first lag, maybe take the 6th or 7th lag (depending on what autocorr() gives you)
+
+QUESTION: Is it worth going through all that hassle? What if I just test my results on the forward data and see how well it predicts...?
+
+I think you should try the latter first, because that is easier and if it works, it works. No need to worry about issues -- you are not trying to get it published; just make money!
+
+More tomorrow/Monday.

@@ -65,6 +65,8 @@ prices_starthour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %Extract start and end dates
 datebounds = ftsbound(prices_all_ts,2);
 
+%Get the OHLC cell array from FX data
+fx_names = fieldnames(prices_all_ts);
 
 % prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %     datebounds(2,:), [], 1, 'd',{'11:00'});
@@ -382,10 +384,11 @@ I.names = {'model'};
 I.vals = {'TS'};
 S.names = {'trend'};
 S.vals = {true};
-i10test(predictors, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', S, ...
-        'VarNames', names_predictors')
+i10test(predictors, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', ...
+        'iparams', S, 'VarNames', names_predictors', 'numDiffs', 1)
 
 
+    
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities
 
