@@ -1,0 +1,97 @@
+***********
+* 1/24/14 *
+***********
+
+year(1)
+
+ans =
+
+        2007
+
+takelogs =
+
+     0
+
+
+lagdecision =
+
+     1
+
+
+twapdecision =
+
+     0
+
+
+starthour =
+
+    10
+
+
+startminute =
+
+     0
+
+
+endhour =
+
+    12
+
+
+endminute =
+
+     0
+
+reg1 = 
+
+Linear regression model:
+    EndHourPrices ~ [Linear formula with 14 terms in 8 predictors]
+
+Estimated Coefficients:
+                            Estimate       SE            tStat      pValue    
+    (Intercept)                  2.1813       0.52854     4.1271    6.3467e-05
+    Australia                0.00021997    0.00010452     2.1046      0.037152
+    BuenosAires              -0.0013516      0.000226    -5.9804    1.8325e-08
+    DowJones                  -0.049204      0.012437    -3.9563    0.00012163
+    HangSeng                -1.4708e-05    6.2941e-06    -2.3369      0.020896
+    Jakarta                  0.00069656    8.0757e-05     8.6254    1.4125e-14
+    Mexico                  -1.9008e-05    4.7368e-06    -4.0129    9.8235e-05
+    Nikkei225               -0.00013759    4.0746e-05    -3.3769    0.00095431
+    Vienna                   0.00066619    0.00016708     3.9873    0.00010824
+    Australia:Nikkei225      2.0286e-08    6.5094e-09     3.1165     0.0022303
+    Australia:Vienna        -1.1371e-07    2.6134e-08     -4.351    2.6293e-05
+    BuenosAires:DowJones     4.2842e-05    6.5998e-06     6.4915    1.4428e-09
+    DowJones:Jakarta          -1.84e-05    2.3859e-06    -7.7119    2.2877e-12
+    HangSeng:Mexico          5.8364e-10    1.9727e-10     2.9586     0.0036414
+
+
+Number of observations: 151, Error degrees of freedom: 137
+Root Mean Squared Error: 0.00655
+R-squared: 0.986,  Adjusted R-Squared 0.985
+F-statistic vs. constant model: 760, p-value = 1.04e-120
+
+dwtest(reg1)
+
+ans =
+
+   4.6143e-12
+   
+>> kstest(reg1.Residuals.Raw)
+
+ans =
+
+     1
+
+>> jbtest(reg1.Residuals.Raw)
+
+ans =
+
+     1
+
+>> lillietest(reg1.Residuals.Raw)
+
+ans =
+
+     0
+     
+   

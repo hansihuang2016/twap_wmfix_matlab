@@ -51,7 +51,7 @@ Looking at the data one can see a few things very clearly:
 	2B. For the crisis years, these patterns seem to be there, but not as distinct.
 (3) No real consistent patterns across the years in skewness, kurtosis or standard deviation.
 
-IMPORTANT: Based off of DeRosa's "4-pip" rule, there seems to be a basic strategy of buying in the morning and selling in the afternoon that *could* potentially lead to a gain of four pips...
+IMPORTANT: Based off of DeRosa's "4-pip" (or was it 8 pips?) rule, there seems to be a basic strategy of buying in the morning and selling in the afternoon that *could* potentially lead to a gain of four pips...but very VERY slim! Max daily average range is 4 pips...
 
 ---- END OF SOMETHING ELSE ----
 
@@ -64,3 +64,82 @@ I am using Matlab's strfind() function to find the ':' in each of the cells to l
 I plan to split up the interaction variables based off of the colon, and then use the Time Series object functions to extract the necessary time series and multiply them with each other.
 
 Pick it up again tomorrow...
+
+*************
+* 1/24/2014 *
+*************
+
+I wrote the code to replicate the results of the stepwise regression and ran a regular multivariate linear regression (using the fitlm() function) to verify that it works. It does!!
+
+Note that though the regression is highly significant and has a large R2, I get significant serial correlation both, by running the dwtest as well as looking at the plot of residuals vs lagged residuals.
+
+Need to deal with that somehow...
+
+Also, I am now exploring ways in which to test multicollinearity in Matlab. It is TERRIBLE with this (may have mentioned this earlier).
+
+---------MULTICOLLINEARITY------------
+
+For multicollinearity, you can:
+
+(1) Calculate RANK: This gives you the number of vectors (columns) that are linearly independent of one another.
+
+rank(predictors) gave me 13 for the 2007 12pm dependent var reg.
+
+(2) Calculate condition number of predictor matrix: The condition number is often used to characterize the overall sensitivity of OLS estimates to changes in the data.
+
+cond(predictors) gave me  1.6478e+10... LARGE! 
+
+This is a problem. 
+
+"The condition number is well above the "well-conditioned" benchmark of 1, which is achieved when  $X_t$ has orthonormal columns. As a rule of thumb, a 1% relative error in the data  $X_t$ can produce up to a  $\kappa$ % relative error in the coefficient estimates  $\beta$ [4]:
+
+$${\|\delta \beta\| \over \|\beta\|} \le \kappa{\|\delta X_t\| \over \|X_t\|}$$
+
+As shown in the previous example on "Linear Models," coefficient estimates for this data are on the order of  $10^{-2}$ , so a  $\kappa$ on the order of  $10^2$ leads to absolute estimation errors  $\|\delta \beta\|$ that are approximated by the relative errors in the data."
+
+(3) You can also calculate the VIFs.
+
+First calculate the correlation matrix of the predictors:
+R0 = corrcoef(predictors)
+
+Then, it turns out that "VIFs are also the diagonal elements of the inverse of the correlation matrix [1], a convenient result that eliminates the need to set up the various regressions"
+
+So we can do: VIF = diag(inv(R0))' [on the correlation matrix calculated above] to get our VIFs.
+
+Doing this gives us:
+
+Columns 1 through 10
+
+    0.3898    0.6484    1.1860    0.1723    0.5076    0.1257    0.2816    0.1749    0.2330    0.2491
+
+  Columns 11 through 13
+
+    0.0252    0.4386    0.3434
+
+"How large a VIF is cause for concern? As with significance levels for standard hypothesis tests, experience with certain types of data may suggest useful tolerances. Common ad hoc values, in the range of 5 to 10, are of little use in general."
+
+Furthermore:
+
+"Econometricians have developed a number of rules of thumb for deciding when to worry about collinearity. Perhaps the most common says that it is acceptable to ignore evidence of collinearity if the resulting t-statistics are all greater than 2 in absolute value."
+
+Bottomline? Since the VIFs are all small, and the t-stats are all greater than 2, I am going to ignore the multicollinearity problem.
+
+Source: http://www.mathworks.com/help/econ/examples/time-series-regression-ii-collinearity-and-estimator-variance.html
+
+
+----------END MULTICOLLINEARITY--------------
+
+Got sucked into the Matlab pages of examples using the Econometric Toolbox (one of them linked above). It seems that the presence of an omitted variable might inflate the t-stats. This is not something I can worry about right now.
+
+------------BEGIN SPURIOUS REGRESSION-------------------
+
+In addition, if there are positive linear trends in the data, this might result in a SPURIOUS REGRESSION. This is only the case if BOTH dep and indep vars have a positive trend...
+
+"Predictors that trend over time are sometimes viewed with suspicion in multiple linear regression (MLR) models. Individually, however, they need not affect ordinary least squares (OLS) estimation. In particular, there is no need to linearize and detrend each predictor. If response values are well-described by a linear combination of the predictors, an MLR model is still applicable, and classical linear model (CLM) assumptions are not violated.
+
+If, however, a trending predictor is paired with a trending response, there is the possibility of spurious regression, where  $t$ -statistics and overall measures of fit become misleadingly "significant." That is, the statistical significance of relationships in the model do not accurately reflect the causal significance of relationships in the data-generating process (DGP)."
+
+It turns out that on visual inspection, both the prices_endhour AND the predictors do indeed have trends...
+
+GOOD NEWS however, is the the Augmented Dickey Fuller tests on each of the predictors gives 1 [assuming this is reject the null that unit root exists...? need to double-check]
+

@@ -2,11 +2,17 @@
 clear all
 close all
 
+%% Set working directory
+workingdir = ...
+    '/Users/arnavsheth/Documents/Research/AdamDuncan/Matlab/Data/';
+
 load prices_all_ts.mat
-load prices_equities_open_ts.mat
+% load prices_equities_open_ts.mat
 load prices_equities_adjclose_ts.mat
 
+year = datevec(prices_all_ts.dates(1));
 
+year(1)
 
 %% Do you want to take logs of equity prices?
 
@@ -279,16 +285,78 @@ else
     reg1 = stepwiselm(prices_equities_adjclose, prices_endhour(:,4))
 end
 
-predictors = extfield(prices_equities_adjclose_ts_lagged1, ...
+%% Creating a separate time series object with the variables (including 
+% interaction terms) that have been used in the stepwise regression
+
+% [Note that I know I will probably find a one-step Matlab function that
+% does this as soon as I have successfully created this time series
+% object...]
+
+%creating a times series of *just* the predictor variables that have come 
+%out of the stepwise regression (NOT including interaction terms)
+predictors_ts = extfield(prices_equities_adjclose_ts_lagged1, ...
     reg1.PredictorNames);
 
-coeff_names = reg1.CoefficentNames;
+%creating a separate variable for the NAMES of all the predictor variables
+%including the interaction terms
+coeff_names = reg1.CoefficientNames;
 
+%Now trying to add the interaction terms to the original predictors time
+%series by using the fact that Matlab spits out interaction terms using a
+%colon (':')...this is terribly inefficient but it gets the job done
 for jj = 1:size(coeff_names,2)
-    if strfind(coeff_names(jj),)
-    
+    %get an index value for the position of the colon (':') if it exists.
+    %if it does not exist then k will be null
+    k = strfind(coeff_names{jj},':');
+    %check that k is not null (this means we have an interaction term)
+    if isequal(k,'') == 0
+        %create a separate variable since coeff_names is a cell array
+        strtmp = coeff_names{jj};
+        %replace the colon with an underscore ('_') because time series
+        %object names cannot contain any other symbol
+        strtmp(k) = '_';
+        %get the first interaction term
+        firstterm = strtmp(1:k-1);
+        %get the second interaction term
+        secondterm = strtmp(k+1:size(strtmp,2));
+        %extract *first* term from the main time series object containing 
+        %ALL lagged equities data
+        getfirst = extfield(prices_equities_adjclose_ts_lagged1, ...
+            firstterm);
+        %extract *second* term from the main time series object containing 
+        %ALL lagged equities data
+        getsecond = extfield(prices_equities_adjclose_ts_lagged1, ...
+            secondterm);
+        %create the interaction variable
+        interac = getfirst.*getsecond;
+        %by default it gets named from the first variable so need to change
+        %the name...
+        interac = chfield(interac, strtmp(1:k-1), strtmp);
+        %merging it with the time series of predictor variables
+        predictors_ts = merge(predictors_ts, interac);
+    end
+    clear idx strtmp firstterm secondterm getfirst getsecond interac
+end
+clear idx strtmp firstterm secondterm getfirst getsecond interac        
+
+%converting it to non-ts obj to use in regression
+predictors = fts2mat(predictors_ts);
+%getting all the names
+names_predictors = fieldnames(predictors_ts,1);
+
+%removing the first 'NaN' value in the predictors data to line it up with
+%the FX data
+predictors = predictors(2:size(predictors,1),:);
+
 %% Linear multivariate regression on Close of 11am FX and Adj Close 
 % of equities
 
-% fitlm(prices_equities, prices_11am(:,4))
+%this is a check to see that our linear multivariate regression matches up
+%with the stepwise regression
+reg2 = fitlm(predictors, prices_lagged_endhour(:,4), ...
+    'VarNames',[names_predictors' 'EndHourPrices'])
+
+save predictors_ts.mat predictors_ts
+save reg1.mat reg1
+save reg2.mat reg2
 
