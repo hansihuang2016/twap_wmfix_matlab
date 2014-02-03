@@ -108,6 +108,10 @@ So we can do: VIF = diag(inv(R0))' [on the correlation matrix calculated above] 
 
 Doing this gives us:
 
+VIF =
+
+   1.0e+04 *
+
 Columns 1 through 10
 
     0.3898    0.6484    1.1860    0.1723    0.5076    0.1257    0.2816    0.1749    0.2330    0.2491
@@ -124,7 +128,11 @@ Furthermore:
 
 Bottomline? Since the VIFs are all small, and the t-stats are all greater than 2, I am going to ignore the multicollinearity problem.
 
-Source: http://www.mathworks.com/help/econ/examples/time-series-regression-ii-collinearity-and-estimator-variance.html
+ADDED ON 2/2:
+I had missed the "1.0e+04 *" earlier!! The VIFs are all EXTREMELY large!!
+
+Source: 
+http://www.mathworks.com/help/econ/examples/time-series-regression-ii-collinearity-and-estimator-variance.html
 
 
 ----------END MULTICOLLINEARITY--------------
@@ -186,4 +194,56 @@ QUESTION: Is it worth going through all that hassle? What if I just test my resu
 
 I think you should try the latter first, because that is easier and if it works, it works. No need to worry about issues -- you are not trying to get it published; just make money!
 
-More tomorrow/Monday.
+More tomorrow/Monday.           
+
+
+*************
+* 2/2/2014 *
+*************
+
+Took a long break from the project (was dealing with CFA stuff)...
+
+Think I have boiled down to two conclusions:
+(1) Use 2013 data for your training data and test on January 2014 onwards...
+(2) Don't get hung up with the spurious regression stuff. Try predicting forward and see what happens.
+
+Anyway, for now you have not run the basic tests on the 2013 data, so go ahead and do that.
+
+The 2013 data is better with the DW Test on autocorrelation, but there are still concerned about multicollinearity, and co-integration (unit root, stationarity). Not sure what to do at this point, but I'm going to go ahead and see the predictive value of the regression on January 2014 data...
+
+BEFORE I DO THAT: I am going to take the first differences of the predictors (since they all pass the unit root and stationarity test), rerun the regression and see what happens...
+
+---
+OOPS!
+---
+Found a mistake in the input data. I was regressing lagged equity index values against the same-day FX values. I wanted to regress lagged equity index values against next-day FX values (for predictability). Corrected this mistake and results are still pretty good...
+
+Ignore the numbers on regressions run before this (esp on the lagged stuff).
+
+---
+END: OOPS!
+---
+
+---
+FIRST-DIFFERENCING
+---
+
+Today I played around with the data a lot. I took first-differences of the lagged equities data and ran a stepwise regression against the FX data. IT DROPPED ALL THE VARIABLES! (Chose only intercept).
+
+Then I took the 2013 EURUSD 11:30am data on the LHS and ran a stepwise on non-D1 data. Next, I differenced it and reran the regression. It lost all of the high t-stats on the predictors, and also the high-R^2, but at least there was no stationarity...
+
+Also got a large, significant, positive alpha. Decided to keep the differenced predictors so that I can use the values in the prediction analysis.
+
+---
+END: FIRST-DIFFERENCING
+---
+
+I am now starting to work on the prediction analysis part.
+
+Done. For 2014 they are TERRIBLE! (Only 8 dates in Jan that intersect across all time series, and the predictions are NEGATIVE!!)
+
+
+
+
+
+

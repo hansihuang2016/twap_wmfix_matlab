@@ -16,7 +16,7 @@ year(1)
 
 %% Do you want to take logs of equity prices?
 
-takelogs = 1 %1 = yes; 0 = no
+takelogs = 0 %1 = yes; 0 = no
 
 %% Do you want to run a lagged regression?
 
@@ -30,6 +30,10 @@ returndecision = 0 %1 = yes; 0 = no
 
 twapdecision = 0 %1 = yes; 0 = no
 
+%% Do you want to take first differences of the equity values?
+
+differencingdecision = 0 %1 = yes; 0 = no
+
 %% Specify start- and end-hour here
 
 %Specify start and end hours in 24-hour format 
@@ -37,11 +41,11 @@ twapdecision = 0 %1 = yes; 0 = no
 starthour = 10
 startminute = 00
 
-endhour = 12
-endminute = 00
+endhour = 11
+endminute = 30
 
-starthour = starthour+(startminute/60);
-endhour = endhour+(endminute/60);
+starthr = starthour+(startminute/60);
+endhr = endhour+(endminute/60);
 
 %Extract start and end dates for equities extraction
 datebounds = ftsbound(prices_all_ts,2);
@@ -53,18 +57,20 @@ datebounds = ftsbound(prices_all_ts,2);
 
 %Doing it for the end-hour first
 %If the end-hour is 11am, this is our proxy for the 11am WM Fix
-dv = cellstr(datestr(endhour/24:1/60/24:endhour/24));
+dv = cellstr(datestr(endhr/24:1/60/24:endhr/24));
 prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
     datebounds(2,:), [], 1, 'd',dv);
 
 %Doing it for the start-hour
-dv = cellstr(datestr(starthour/24:1/60/24:starthour/24));
+dv = cellstr(datestr(starthr/24:1/60/24:starthr/24));
 prices_starthour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
     datebounds(2,:), [], 1, 'd',dv);
 
 %Extract start and end dates
 datebounds = ftsbound(prices_all_ts,2);
 
+%Get the OHLC cell array from FX data
+fx_names = fieldnames(prices_all_ts,1);
 
 % prices_endhour_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
 %     datebounds(2,:), [], 1, 'd',{'11:00'});
@@ -97,6 +103,8 @@ returns_equities_open = fts2mat(returns_equities_open_ts);
 
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
+
+
 
 %%%%%%%%%%%%%%%%%%
 %%Take logs of prices to make them comparable to FX data...
@@ -146,7 +154,7 @@ if twapdecision == 1
     
     %Create vector of times and extract all prices from
     %starthour to starthour + 59mins daily
-    dv = cellstr(datestr(starthour/24:1/60/24:endhour/24-1/60/24));
+    dv = cellstr(datestr(starthr/24:1/60/24:endhr/24-1/60/24));
     prices_hourly_ts = fetch(prices_all_ts, datebounds(1,:), [], ...
         datebounds(2,:), [], 1, 'd',dv);
 
@@ -241,11 +249,10 @@ clear missingdates datenums_hourly datenums_endhour rowidx_nan...
     check_missing nan_entry nan_entry_ts common_datenums datenums_starthour...
     datenums_equities_prices datenums_equities_rtns
 
-%% Converting FX FTS objects back to non-FTS objects to use in regression
+%% Converting FX FTS objects back to matrix to use in regression
 
 prices_endhour = fts2mat(prices_endhour_ts);
 prices_starthour = fts2mat(prices_starthour_ts);
-
 
 %% Doing the lagging and lining up of variables
 
@@ -254,6 +261,9 @@ prices_equities_adjclose_ts_lagged1 = ...
     lagts(prices_equities_adjclose_ts,1,NaN);
 prices_equities_adjclose_lagged1 = ...
     fts2mat(prices_equities_adjclose_ts_lagged1);
+
+% prices_equities_adjclose_ds_lagged1 = ...
+%     mat2dataset(prices_equities_adjclose_ts_lagged1);
 
 returns_equities_adjclose_ts_lagged1 = ...
     lagts(returns_equities_adjclose_ts,1,NaN);
@@ -272,32 +282,72 @@ returns_equities_adjclose_lagged1 = ...
     returns_equities_adjclose_lagged1(2:size(returns_equities_adjclose_lagged1,1),:);
 
 
-%removing the last day of the year for the FX values
-prices_lagged_endhour = prices_endhour(1:size(prices_endhour,1)-1,:);
-prices_lagged_starthour = prices_starthour(1:size(prices_starthour,1)-1,:);
+%removing the first day of the year for the FX values so that we can use 
+%the lagged equity values as predictors (the t-1 period equity value 
+%corresponding to t-period fx value)
+prices_lagged_endhour = prices_endhour(2:size(prices_endhour,1),:);
+prices_lagged_starthour = prices_starthour(2:size(prices_starthour,1),:);
 
+%converting non-lagged values to use in regression
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
+
+%% Taking first differences and lining things up
+
+%Taking first differences of the RHS variables
+prices_equities_adjclose_ts_lagged1_d1 = ...
+    diff(prices_equities_adjclose_ts_lagged1);
+
+prices_equities_adjclose_lagged1_d1 = ...
+    fts2mat(prices_equities_adjclose_ts_lagged1_d1);
+
+%removing the first 'NaN' value in the lagged equities data
+prices_equities_adjclose_lagged1_d1 = ...
+    prices_equities_adjclose_lagged1_d1(2:size(prices_equities_adjclose_lagged1_d1,1),:);
+
+%Now removing the second day of the year for the FX values so that we can 
+% use the lagged AND first-differenced equity values as predictors 
+
+prices_lagged_d1_endhour = ...
+    prices_endhour(2:size(prices_lagged_endhour,1),:);
+prices_lagged_d1_starthour = ...
+    prices_starthour(2:size(prices_lagged_starthour,1),:);
+
+
 
 %% Stepwise regression on Close of End-Hour FX and Adj Close of equities
 
 if lagdecision == 1
     %running the regression on lagged equity/unlagged FX
-    if returndecision ==1 
-        %running the regression on lagged RETURNS/unlagged FX
-        depvar = 'EndHourReturns';
+    if returndecision == 1 
+        %running the regression on JUST lagged RETURNS/unlagged FX
+        depvar = ['L1Returns_' num2str(endhour) num2str(endminute) '_'...
+            num2str(year(1))];
         
         reg1 = stepwiselm(returns_equities_adjclose_lagged1, ...
         prices_lagged_endhour(:,4), ...
         'VarNames',[names_equities' depvar])
     else
-        depvar = 'EndHourPrices';
-        
-        reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
-        prices_lagged_endhour(:,4), ...
-        'VarNames',[names_equities' depvar])
-    end
+        if differencingdecision == 1
+            %running the regression on lagged AND first-differenced equity
+            %VALUES/unlagged FX
+            depvar = ['L1D1Prices_' num2str(endhour) num2str(endminute) '_'...
+                            num2str(year(1))];
+            
+            reg1 = stepwiselm(prices_equities_adjclose_lagged1_d1, ...
+            prices_lagged_d1_endhour(:,4), ...
+            'VarNames',[names_equities' depvar])
+        else        
+            %running the regression on JUST lagged equity VALUES
+            depvar = ['L1Prices_' num2str(endhour) num2str(endminute) '_'...
+                num2str(year(1))];
 
+            reg1 = stepwiselm(prices_equities_adjclose_lagged1, ...
+            prices_lagged_endhour(:,4), ...
+            'VarNames',[names_equities' depvar])
+        end
+    end
+    
 %     reg4 = stepwiselm(prices_equities_adjclose_lagged1, ...
 %         prices_lagged_starthour(:,4), ...
 %         'VarNames',[names_equities 'StartHourPrices'])
@@ -370,31 +420,54 @@ names_predictors = fieldnames(predictors_ts,1);
 %the FX data
 predictors = predictors(2:size(predictors,1),:);
 
-%testing for integration: 
+%% Testing for integration: 
 %(1) Augmented Dickey-Fuller test which tests for unit root, trend and
 %positive drift with the option of 'TS' (trend stationary). A result of 1
 %indicates that the null has been rejected, and the alternative is no
 %unit root.
 %(2) KPSS test which tests for stationarity. A result of 0 indicates that
 %the null of stationarity cannot be rejected.
+
 %Note that We *want* 1 from adftest and 0 from kpsstest.
-I.names = {'model'};
-I.vals = {'TS'};
-S.names = {'trend'};
-S.vals = {true};
-i10test(predictors, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', S, ...
-        'VarNames', names_predictors')
+
+% I.names = {'model'};
+% I.vals = {'TS'};
+% S.names = {'trend'};
+% S.vals = {true};
+% i10test(predictors, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', ...
+%         'iparams', S, 'VarNames', names_predictors', 'numDiffs', 1)
 
 
-%% Linear multivariate regression on Close of 11am FX and Adj Close 
+    
+%% Linear multivariate regression on Close of End-Hour FX and Adj Close 
 % of equities
 
-%this is a check to see that our linear multivariate regression matches up
+%This is a check to see that our linear multivariate regression matches up
 %with the stepwise regression
 reg2 = fitlm(predictors, prices_lagged_endhour(:,4), ...
     'VarNames',[names_predictors' depvar])
 
+%% Taking first-differences and lining things up
+
+%First-differencing the predictors
+predictors_d1_ts = diff(predictors_ts);
+
+%Converting to non-FTS to remove that first 'NaN'
+predictors_d1 = fts2mat(predictors_d1_ts);
+predictors_d1 = predictors_d1(2:size(predictors_d1,1),:);
+
+%Running regression on first-differenced variables
+depvar = ['L1D1Prices_' num2str(endhour) num2str(endminute) '_'...
+           num2str(year(1))];
+reg3 = fitlm(predictors_d1, prices_lagged_d1_endhour(:,4), ...
+    'VarNames',[names_predictors' depvar])
+
+% i10test(predictors_d1, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', ...
+%         'iparams', S, 'VarNames', names_predictors', 'numDiffs', 1)
+
+    
+    
+save predictors_d1_ts.mat predictors_d1_ts
 save predictors_ts.mat predictors_ts
 save reg1.mat reg1
-% save reg2.mat reg2
-
+save reg1_d1.mat reg3

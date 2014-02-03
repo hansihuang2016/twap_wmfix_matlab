@@ -94,4 +94,120 @@ ans =
 
      0
      
-   
+
+
+*************
+* 2/2/2014 *
+*************
+ 
+ 
+reg1 = 
+
+
+Linear regression model:
+    L1Prices_1130_2013 ~ [Linear formula with 24 terms in 12 predictors]
+
+Estimated Coefficients:
+                               Estimate       SE            tStat      pValue    
+    (Intercept)                     2.4709        2.1505      1.149       0.25291
+    Bombay                     -5.7125e-06    2.1694e-06    -2.6332     0.0096001
+    BuenosAires                 -0.0001356    6.5847e-05    -2.0592      0.041692
+    DowJones                       0.10003      0.030693     3.2589     0.0014647
+    Frankfurt                   0.00020602    3.5764e-05     5.7606    6.9018e-08
+    Korea                       5.7283e-05    2.7641e-05     2.0724      0.040428
+    London                      0.00023687      7.84e-05     3.0212     0.0030924
+    Malaysia                    -0.0014941     0.0013841    -1.0795        0.2826
+    Nikkei225                  -0.00018069    7.3621e-05    -2.4544      0.015586
+    Russell2000                 -0.0043642     0.0019469    -2.2416      0.026871
+    SaoPaulo                     6.162e-05    9.2394e-06     6.6693    8.9498e-10
+    Swiss                       0.00075251    0.00027531     2.7333     0.0072448
+    Toronto                     -0.0006618    0.00018369    -3.6029    0.00046332
+    BuenosAires:Frankfurt      -4.6764e-08    8.4875e-09    -5.5097     2.168e-07
+    BuenosAires:Russell2000     2.4023e-07    6.2271e-08     3.8579    0.00018767
+    BuenosAires:SaoPaulo        5.5517e-09    1.0685e-09     5.1957    8.7355e-07
+    DowJones:Malaysia          -5.3106e-05    1.2576e-05    -4.2226    4.7993e-05
+    DowJones:SaoPaulo          -1.2724e-06    2.9711e-07    -4.2827    3.8044e-05
+    DowJones:Swiss              7.6588e-06     2.257e-06     3.3933    0.00094306
+    London:SaoPaulo            -5.7503e-09      1.47e-09    -3.9119    0.00015416
+    Malaysia:Nikkei225          9.8508e-08    4.1422e-08     2.3782      0.019019
+    Malaysia:Russell2000        2.0837e-06    1.1007e-06     1.8931      0.060813
+    Malaysia:Swiss             -5.7987e-07    1.7614e-07     -3.292     0.0013154
+    Malaysia:Toronto            3.6834e-07    1.0435e-07     3.5297    0.00059574
+
+
+Number of observations: 141, Error degrees of freedom: 117
+Root Mean Squared Error: 0.0064
+R-squared: 0.957,  Adjusted R-Squared 0.948
+F-statistic vs. constant model: 113, p-value = 7.52e-69
+
+>> kstest(reg1.Residuals.Raw)
+
+ans =
+
+     1
+
+>> jbtest(reg1.Residuals.Raw)
+
+ans =
+
+     0
+
+>> lillietest(reg1.Residuals.Raw)
+
+ans =
+
+     0
+
+>> [hLBQ,pLBQ] = lbqtest(reg1.Residuals.Raw,'Lags',[4,6,7])
+
+hLBQ =
+
+     0     1     1
+
+
+pLBQ =
+
+    0.4370    0.0369    0.0177
+
+>> [hARCH,pARCH] = archtest(reg1.Residuals.Raw,'Lags',[4,6,7])
+
+hARCH =
+
+     0     0     0
+
+
+pARCH =
+
+    0.2170    0.3992    0.5069
+
+>> [p,dw] = dwtest(reg1)
+
+p =
+
+    0.0666
+
+
+dw =
+
+    1.9780
+
+>> R0 = corrcoef(predictors);
+>> VIF = diag(inv(R0))'
+
+VIF =
+
+   1.0e+05 *
+
+  Columns 1 through 11
+
+    0.0001    0.1198    0.2336    0.1943    0.0975    0.4419    0.3514    0.1473    0.2136    0.0115    0.0001
+
+  Columns 12 through 22
+
+    0.0051    0.0438    0.2079    0.3860    1.2612    0.6053    0.5819    0.2151    0.6518    0.0343    0.1385
+
+  Column 23
+
+    0.1978
+
+        
