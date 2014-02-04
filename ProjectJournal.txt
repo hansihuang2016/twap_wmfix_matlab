@@ -197,9 +197,9 @@ I think you should try the latter first, because that is easier and if it works,
 More tomorrow/Monday.           
 
 
-*************
+************
 * 2/2/2014 *
-*************
+************
 
 Took a long break from the project (was dealing with CFA stuff)...
 
@@ -243,7 +243,15 @@ I am now starting to work on the prediction analysis part.
 Done. For 2014 they are TERRIBLE! (Only 8 dates in Jan that intersect across all time series, and the predictions are NEGATIVE!!)
 
 
+************
+* 2/3/2014 *
+************
 
+Played around with the predictions more. The predictive values are coming out very LARGE. What is going on there?
+
+Also, now I need to start playing around with the TWAP as well. Would the TWAP be a better predictor? What about the difference between 11am and TWAP? Need to work on that next...
+
+How about running a regular regression and checking the prediction values on that?
 
 
 

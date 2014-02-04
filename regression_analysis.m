@@ -444,7 +444,7 @@ predictors = predictors(2:size(predictors,1),:);
 
 %This is a check to see that our linear multivariate regression matches up
 %with the stepwise regression
-reg2 = fitlm(predictors, prices_lagged_endhour(:,4), ...
+reg1_lm = fitlm(predictors, prices_lagged_endhour(:,4), ...
     'VarNames',[names_predictors' depvar])
 
 %% Taking first-differences and lining things up
@@ -459,7 +459,7 @@ predictors_d1 = predictors_d1(2:size(predictors_d1,1),:);
 %Running regression on first-differenced variables
 depvar = ['L1D1Prices_' num2str(endhour) num2str(endminute) '_'...
            num2str(year(1))];
-reg3 = fitlm(predictors_d1, prices_lagged_d1_endhour(:,4), ...
+reg1_d1 = fitlm(predictors_d1, prices_lagged_d1_endhour(:,4), ...
     'VarNames',[names_predictors' depvar])
 
 % i10test(predictors_d1, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', ...
@@ -470,4 +470,4 @@ reg3 = fitlm(predictors_d1, prices_lagged_d1_endhour(:,4), ...
 save predictors_d1_ts.mat predictors_d1_ts
 save predictors_ts.mat predictors_ts
 save reg1.mat reg1
-save reg1_d1.mat reg3
+save reg1_d1.mat reg1_d1

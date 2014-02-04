@@ -103,6 +103,10 @@ endhr = endhour+(endminute/60);
 %Extract start and end dates for equities extraction
 datebounds = ftsbound(prices_all_ts,2);
 
+%% Specify differencing decision here
+
+differencingdecision = 1 %1 = yes; 0 = no
+
 
 %% Start data extraction for FX
 
@@ -216,24 +220,48 @@ for jj = 1:size(coeff_names,2)
 end
 clear idx strtmp firstterm secondterm getfirst getsecond interac        
 
-%converting it to non-ts obj and adding a series of '1's to 
-%to account for the intercept
-predictors = fts2mat(predictors_ts);
-predictors = [ones(size(predictors,1),1) predictors];
+if differencingdecision == 1
+    %first-differencing the independent variables
+    predictors_d1_ts = diff(predictors_ts);
+    %converting it to non-ts obj
+    predictors_d1 = fts2mat(predictors_ts);
+    %removing that first 'NaN'
+    predictors_d1 = predictors_d1(2:size(predictors_d1,1),:);
+    %adding a series of '1's to account for the intercept
+    predictors_d1 = [ones(size(predictors_d1,1),1) predictors_d1];
+else
+    %converting it to non-ts obj and adding a series of '1's to 
+    %to account for the intercept
+    predictors = fts2mat(predictors_ts);
+    predictors = [ones(size(predictors,1),1) predictors];
+end
 
 %% Making the predictions here
 
 %Extract coefficient values from regression
-coeffs = reg1.Coefficients.Estimate;
+if differencingdecision == 0
+    coeffs = reg1.Coefficients.Estimate;
+else
+    coeffs = reg1_d1.Coefficients.Estimate;
+end
 
 %Get predictions
-predicTIONS = coeffs'*predictors';
+if differencingdecision == 0
+    predicTIONS = coeffs'*predictors';
+else
+    predicTIONS = coeffs'*predictors_d1';
+end
 
 %Get actuals
 prices_endhour = fts2mat(prices_endhour_ts);
+prices_lagged_endhour = prices_endhour(2:size(prices_endhour,1),:);
 
 %Plot predictions vs. actuals
-scatter(prices_endhour(:,4),predicTIONS)
+if differencingdecision == 0
+    scatter(prices_endhour(:,4),predicTIONS)
+else
+    scatter(prices_lagged_endhour(:,4),predicTIONS)
+end
 
 
     
