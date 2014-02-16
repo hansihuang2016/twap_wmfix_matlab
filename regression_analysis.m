@@ -28,7 +28,7 @@ returndecision = 0 %1 = yes; 0 = no
 
 %% Do you want to calculate the TWAP between the start- and the end-hour?
 
-twapdecision = 0 %1 = yes; 0 = no
+twapdecision = 1 %1 = yes; 0 = no
 
 %% Do you want to take first differences of the equity values?
 
@@ -42,7 +42,7 @@ starthour = 10
 startminute = 00
 
 endhour = 11
-endminute = 30
+endminute = 00
 
 starthr = starthour+(startminute/60);
 endhr = endhour+(endminute/60);
@@ -211,8 +211,7 @@ if twapdecision == 1
     datenums_TWAP = datenum(prices_TWAP(:,1:3));
     
     %Merge all the datenums
-    datenums_fx = intersect(datenums_endhour, datenums_starthour, ...
-        datenums_TWAP, 'rows');    
+    datenums_fx = intersect(datenums_endhour, datenums_TWAP, 'rows');    
 
     %Converting the hourly TWAPs to FTS object
     prices_TWAP_ts = fints(datenum(prices_TWAP(:,1:6)), ...
