@@ -210,4 +210,76 @@ VIF =
 
     0.1978
 
-        
+
+*************
+* 2/16/2014 *
+*************
+
+Linear regression model:
+    10to11TWAP_minus_1100_2007 ~ 1 + Bombay
+
+Estimated Coefficients:
+                   Estimate     SE            tStat     pValue   
+    (Intercept)    -0.012554     0.0044424    -2.826    0.0053071
+    Bombay         0.0013005    0.00046093    2.8214    0.0053795
+
+
+Number of observations: 164, Error degrees of freedom: 162
+Root Mean Squared Error: 0.000824
+R-squared: 0.0468,  Adjusted R-Squared 0.041
+F-statistic vs. constant model: 7.96, p-value = 0.00538
+>> autocorr(reg1.Residuals.Raw)
+>> [p, dw] = dwtest(reg1)
+
+p =
+
+    0.0300
+
+
+dw =
+
+    1.6731
+    
+    
+>> kstest(reg1.Residuals.Raw)
+
+ans =
+
+     1
+
+>> jbtest(reg1.Residuals.Raw)
+
+ans =
+
+     1
+
+>> lillietest(reg1.Residuals.Raw)
+
+ans =
+
+     0
+
+
+>> [hARCH,pARCH] = archtest(reg1.Residuals.Raw,'Lags',[1,6,7])
+
+hARCH =
+
+     0     0     0
+
+
+pARCH =
+
+    0.8688    0.9439    0.9735
+
+>> [hLBQ,pLBQ] = lbqtest(reg1.Residuals.Raw,'Lags',[1,6,7])
+
+hLBQ =
+
+     0     0     0
+
+
+pLBQ =
+
+    0.0555    0.1047    0.0551
+    
+NO NEED FOR VIF (ONLY ONE PREDICTOR VAR!)

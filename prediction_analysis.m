@@ -2,7 +2,7 @@ clear all
 close all
 
 load reg1.mat
-load reg1_d1.mat
+% load reg1_d1.mat
 
 %% Set working directory
 workingdir = ...
@@ -10,7 +10,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2008_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
@@ -91,11 +91,11 @@ clear ii
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 10
+starthour = 11
 startminute = 00
 
-endhour = 11
-endminute = 30
+endhour = 13
+endminute = 00
 
 starthr = starthour+(startminute/60);
 endhr = endhour+(endminute/60);
@@ -105,7 +105,7 @@ datebounds = ftsbound(prices_all_ts,2);
 
 %% Specify differencing decision here
 
-differencingdecision = 1 %1 = yes; 0 = no
+differencingdecision = 0 %1 = yes; 0 = no
 
 
 %% Start data extraction for FX
@@ -258,10 +258,11 @@ prices_lagged_endhour = prices_endhour(2:size(prices_endhour,1),:);
 
 %Plot predictions vs. actuals
 if differencingdecision == 0
-    scatter(prices_endhour(:,4),predicTIONS)
+    scatter(predicTIONS, prices_endhour(:,4))
 else
-    scatter(prices_lagged_endhour(:,4),predicTIONS)
+    scatter(predicTIONS, prices_lagged_endhour(:,4))
 end
 
+reg_pred = fitlm(predicTIONS, prices_endhour(:,4))
 
     

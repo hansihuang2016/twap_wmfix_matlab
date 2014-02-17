@@ -255,3 +255,22 @@ How about running a regular regression and checking the prediction values on tha
 
 
 
+************
+* 2/16/2014 *
+************
+
+Starting over again with a new paradigm. Since the regression models I have used so far are pretty useless in terms of predictability as well as violating all of the assumptions, I am going take the difference between either the TWAP or two hours so that there is automatically some sort of differencing on the LHS. 
+
+The 10am to 11am TWAP minus 11am prices for 2007 FX values results in something that looks fairly stationary. When I run the regression, it actually leads to reasonable predictions.
+
+Also two tests give normality of residuals (kstest, jbtest). No evidence of autocorrelation or heteroscedasticity.
+
+Wow! Think I might actually have something to present on Thursday!
+
+Tried a number of different alternatives:
+(1) 2013 numbers are TERRIBLE. Tried:
+	a. 10am to 11am TWAP minus 11am Fix
+	b. 9am to 2pm TWAP minus 11am Fix
+	c. 11am to 11:30am TWAP minus 11am Fix
+	d. 9am to 10am TWAP minus 11am Fix
+	e. and more...
