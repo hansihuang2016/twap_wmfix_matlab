@@ -41,10 +41,10 @@ differencingdecision = 0 %1 = yes; 0 = no
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 9
+starthour = 10
 startminute = 00
 
-endhour = 10
+endhour = 11
 endminute = 00
 
 fixhour = 11+(00/60);

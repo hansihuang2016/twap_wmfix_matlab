@@ -10,7 +10,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2008_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
@@ -91,10 +91,10 @@ clear ii
 
 %Specify start and end hours in 24-hour format 
 %(e.g., 5 for 5am, 17 for 5pm)
-starthour = 11
+starthour = 10
 startminute = 00
 
-endhour = 13
+endhour = 11
 endminute = 00
 
 starthr = starthour+(startminute/60);
