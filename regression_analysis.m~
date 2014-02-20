@@ -16,12 +16,12 @@ year(1)
 
 %% Do you want to take logs of equity prices?
 
-takelogs = 1 %1 = yes; 0 = no
+takelogs = 0 %1 = yes; 0 = no
 
 %% Do you want to run a lagged regression?
 % this lags equities by number of days specified by lagperiod 
 
-lagdecision = 0 %1 = yes; 0 = no
+lagdecision = 1 %1 = yes; 0 = no
 
 lagperiod = 1 %set number of days you want to lag equities here
 
@@ -31,7 +31,7 @@ returndecision = 0 %1 = yes; 0 = no
 
 %% Do you want to calculate the TWAP between the start- and the end-hour?
 
-twapdecision = 1 %1 = yes; 0 = no
+twapdecision = 0 %1 = yes; 0 = no
 
 %% Do you want to take first differences of the equity values?
 
@@ -44,7 +44,7 @@ differencingdecision = 0 %1 = yes; 0 = no
 starthour = 10
 startminute = 00
 
-endhour = 11
+endhour = 12
 endminute = 00
 
 fixhour = 11+(00/60);
@@ -465,16 +465,9 @@ if lagdecision == 1
         'VarNames',[names_predictors' depvar])
     else
         reg1_lm = fitlm(predictors_lagged, prices_lagged_endhour(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    end
 else
-    if twapdecision == 1
-        reg1_lm = fitlm(predictors, prices_diff(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    else
-        reg1_lm = fitlm(predictors, prices_endhour(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    end
+    reg1_lm = fitlm(predictors, prices_diff(:,4), ...
+    'VarNames',[names_predictors' depvar])
 end
 
 %% Taking first-differences and lining things up

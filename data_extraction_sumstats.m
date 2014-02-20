@@ -12,7 +12,7 @@ fx_names = {'Open'; 'High'; 'Low'; 'Close'};
     
 currency = 'EURUSD' %ALLCAPS please
 
-startyear = 2010
+startyear = 2013
 endyear = 2013
 
 yearvector = startyear:endyear;

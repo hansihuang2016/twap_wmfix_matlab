@@ -283,3 +283,207 @@ pLBQ =
     0.0555    0.1047    0.0551
     
 NO NEED FOR VIF (ONLY ONE PREDICTOR VAR!)
+
+*************
+* 2/16/2014 *
+*************
+
+!!!!!!!!!!
+!!!!WARNING: SPURIOUS REGRESSION!!!!!
+!!!!!!!!!!
+
+reg1 = 
+
+
+Linear regression model:
+    L1Prices_1200_2007 ~ [Linear formula with 10 terms in 7 predictors]
+
+Estimated Coefficients:
+                            Estimate       SE            tStat  
+    (Intercept)                  2.2128       0.44901     4.9283
+    Australia                2.2324e-05    9.0039e-06     2.4793
+    BuenosAires               -0.001158    0.00025427    -4.5543
+    DowJones                  -0.026955      0.013105    -2.0567
+    HangSeng                 4.3387e-06    8.6958e-07     4.9894
+    Jakarta                   0.0008154    9.4015e-05     8.6732
+    Nikkei225               -1.3587e-05     2.339e-06    -5.8088
+    Vienna                  -5.7966e-05    9.4571e-06    -6.1294
+    BuenosAires:DowJones     3.7191e-05    7.5192e-06     4.9462
+    DowJones:Jakarta        -2.2596e-05    2.8027e-06    -8.0624
+
+
+                            pValue    
+    (Intercept)             2.2804e-06
+    Australia                 0.014333
+    BuenosAires             1.1216e-05
+    DowJones                  0.041541
+    HangSeng                1.7445e-06
+    Jakarta                 8.7466e-15
+    Nikkei225               3.9609e-08
+    Vienna                   8.241e-09
+    BuenosAires:DowJones    2.1084e-06
+    DowJones:Jakarta        2.8083e-13
+
+
+Number of observations: 152, Error degrees of freedom: 142
+Root Mean Squared Error: 0.00837
+R-squared: 0.977,  Adjusted R-Squared 0.976
+F-statistic vs. constant model: 680, p-value = 4.76e-112
+
+
+---------------------------
+PREDICTIVE RESULTS: 2008
+---------------------------
+
+reg_pred = 
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue    
+    (Intercept)    0.90854     0.029888    30.399    2.0588e-70
+    x1             0.72571     0.037821    19.188    2.6926e-44
+
+
+Number of observations: 171, Error degrees of freedom: 169
+Root Mean Squared Error: 0.0594
+R-squared: 0.685,  Adjusted R-Squared 0.684
+F-statistic vs. constant model: 368, p-value = 2.69e-44
+
+
+---------------------------
+PREDICTIVE RESULTS: 2009
+---------------------------
+
+
+reg_pred = 
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue     
+    (Intercept)    0.91245      0.01525    59.833    1.5858e-117
+    x1             0.78315     0.024354    32.157      6.853e-75
+
+
+Number of observations: 175, Error degrees of freedom: 173
+Root Mean Squared Error: 0.0275
+R-squared: 0.857,  Adjusted R-Squared 0.856
+F-statistic vs. constant model: 1.03e+03, p-value = 6.85e-75
+
+
+
+---------------------------
+PREDICTIVE RESULTS: 2010
+---------------------------
+
+
+reg_pred = 
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue    
+    (Intercept)     1.1787     0.060656    19.433    2.9713e-45
+    x1             0.18579     0.075838    2.4498      0.015295
+
+
+Number of observations: 174, Error degrees of freedom: 172
+Root Mean Squared Error: 0.0597
+R-squared: 0.0337,  Adjusted R-Squared 0.0281
+F-statistic vs. constant model: 6, p-value = 0.0153
+
+
+
+
+---------------------------
+PREDICTIVE RESULTS: 2011
+---------------------------
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue    
+    (Intercept)      1.169     0.038271    30.545    2.9266e-70
+    x1             0.24361     0.041613    5.8542    2.4757e-08
+
+
+Number of observations: 169, Error degrees of freedom: 167
+Root Mean Squared Error: 0.0409
+R-squared: 0.17,  Adjusted R-Squared 0.165
+F-statistic vs. constant model: 34.3, p-value = 2.48e-08
+
+
+
+---------------------------
+PREDICTIVE RESULTS: 2012
+---------------------------
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue    
+    (Intercept)    0.71542     0.074314    9.6271    3.7947e-17
+    x1             0.59057     0.077574     7.613    3.6033e-12
+
+
+Number of observations: 142, Error degrees of freedom: 140
+Root Mean Squared Error: 0.0303
+R-squared: 0.293,  Adjusted R-Squared 0.288
+F-statistic vs. constant model: 58, p-value = 3.6e-12
+
+
+
+---------------------------
+PREDICTIVE RESULTS: 2013
+---------------------------
+
+reg_pred = 
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat     pValue    
+    (Intercept)     1.0136     0.020032    50.601    2.6905e-92
+    x1             0.25664     0.016263     15.78    5.8964e-33
+
+
+Number of observations: 143, Error degrees of freedom: 141
+Root Mean Squared Error: 0.0169
+R-squared: 0.638,  Adjusted R-Squared 0.636
+F-statistic vs. constant model: 249, p-value = 5.9e-33
+
+
+---------------------------
+PREDICTIVE RESULTS: 2014
+---------------------------
+
+
+reg_pred = 
+
+
+Linear regression model:
+    y ~ 1 + x1
+
+Estimated Coefficients:
+                   Estimate    SE          tStat      pValue    
+    (Intercept)      1.3267    0.079458     16.697    1.6741e-07
+    x1             0.025086    0.057595    0.43555       0.67467
+
+
+Number of observations: 10, Error degrees of freedom: 8
+Root Mean Squared Error: 0.00602
+R-squared: 0.0232,  Adjusted R-Squared -0.0989
+F-statistic vs. constant model: 0.19, p-value = 0.675
