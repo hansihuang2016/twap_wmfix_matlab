@@ -255,9 +255,9 @@ How about running a regular regression and checking the prediction values on tha
 
 
 
-************
+*************
 * 2/16/2014 *
-************
+*************
 
 Starting over again with a new paradigm. Since the regression models I have used so far are pretty useless in terms of predictability as well as violating all of the assumptions, I am going take the difference between either the TWAP or two hours so that there is automatically some sort of differencing on the LHS. 
 
@@ -274,3 +274,11 @@ Tried a number of different alternatives:
 	c. 11am to 11:30am TWAP minus 11am Fix
 	d. 9am to 10am TWAP minus 11am Fix
 	e. and more...
+
+
+
+*************
+* 8/8/2014 *
+*************
+
+So a lot has happened since I last wrote in this journal. After taking the difference between the TWAP and the 11am prices, all of the problems of autocorrelation, heteroscedasticity, covariance stationarity go away.

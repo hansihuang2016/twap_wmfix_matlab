@@ -21,11 +21,11 @@ takelogs = 1 %1 = yes; 0 = no
 %% Do you want to run a lagged regression?
 % this lags equities by number of days specified by lagperiod 
 
-lagdecision = 0 %1 = yes; 0 = no
+lagdecision = 1 %1 = yes; 0 = no
 
 lagperiod = 1 %set number of days you want to lag equities here
 
-%% Do you want to regress returns or prices?
+%% Do you want to regress RETURNS (as opposed to prices)?
 
 returndecision = 0 %1 = yes; 0 = no
 
@@ -235,6 +235,10 @@ prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 if twapdecision == 1
     prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
     prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
+    %Converting to matrix for creating logical var
+    prices_diff = fts2mat(prices_diff_ts);
+    prices_diff_logical = prices_diff > 0;
+    prices_diff_logical = prices_diff_logical(:,4);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -250,9 +254,7 @@ clear missingdates datenums_hourly datenums_endhour rowidx_nan...
 
 prices_endhour = fts2mat(prices_endhour_ts);
 prices_starthour = fts2mat(prices_starthour_ts);
-if twapdecision == 1
-    prices_diff = fts2mat(prices_diff_ts);
-end
+
 %% Doing the lagging and lining up of variables
 
 %Lagging equities adj close by 1 period
@@ -323,6 +325,15 @@ if twapdecision == 1
 
         reg1 = stepwiselm(prices_equities_adjclose, prices_diff(:,4), ...
             'VarNames',[names_equities' depvar])
+    else
+        %running the regression with TWAP - 11am prices as response var and
+        %LAGGED (by one day) equity values on the RHS
+        depvar = [num2str(starthour) 'to' num2str(endhour) ...
+            'TWAP_minus_11amfix_' num2str(year(1))];
+        
+        reg1 = stepwiselm(prices_equities_adjclose_lagged, ...
+            prices_lagged_diff(:,4), ...
+            'VarNames',[names_equities' depvar])
     end
 else
     if lagdecision == 1
@@ -333,7 +344,7 @@ else
                 num2str(endminute) '_' num2str(year(1))];
 
             reg1 = stepwiselm(returns_equities_adjclose_lagged, ...
-            prices_lagged_endhour(:,4), ...
+            prices_lagged_diff(:,4), ...
             'VarNames',[names_equities' depvar])
         else
             if differencingdecision == 1
@@ -379,7 +390,12 @@ end
 
 %creating a times series of *just* the predictor variables that have come 
 %out of the stepwise regression (NOT including interaction terms)
-predictors_ts = extfield(prices_equities_adjclose_ts_lagged, ...
+
+% NOT QUITE SURE WHY I LAGGED THIS HERE
+% predictors_ts = extfield(prices_equities_adjclose_ts_lagged, ...
+%     reg1.PredictorNames);
+
+predictors_ts = extfield(prices_equities_adjclose_ts, ...
     reg1.PredictorNames);
 
 %creating a separate variable for the NAMES of all the predictor variables
@@ -406,12 +422,25 @@ for jj = 1:size(coeff_names,2)
         secondterm = strtmp(k+1:size(strtmp,2));
         %extract *first* term from the main time series object containing 
         %ALL lagged equities data
-        getfirst = extfield(prices_equities_adjclose_ts_lagged, ...
+
+% NOT QUITE SURE WHY I LAGGED THIS HERE
+%         getfirst = extfield(prices_equities_adjclose_ts_lagged, ...
+%             firstterm);
+
+        getfirst = extfield(prices_equities_adjclose_ts, ...
             firstterm);
+        
+        
         %extract *second* term from the main time series object containing 
         %ALL lagged equities data
-        getsecond = extfield(prices_equities_adjclose_ts_lagged, ...
+
+%         getsecond = extfield(prices_equities_adjclose_ts_lagged, ...
+%             secondterm);
+
+% NOT QUITE SURE WHY I LAGGED THIS HERE
+        getsecond = extfield(prices_equities_adjclose_ts, ...
             secondterm);
+        
         %create the interaction variable
         interac = getfirst.*getsecond;
         %by default it gets named from the first variable so need to change

@@ -10,7 +10,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2010_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
@@ -85,7 +85,7 @@ close(connect)
 
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 
-clear ii
+clear ii equities_tmp_ts
 
 %% Specify start- and end-hour here
 
@@ -259,10 +259,20 @@ prices_lagged_endhour = prices_endhour(2:size(prices_endhour,1),:);
 %Plot predictions vs. actuals
 if differencingdecision == 0
     scatter(predicTIONS, prices_endhour(:,4))
+    lsline
+    xlabel('Predictions')
+    ylabel('Actuals')
+    title(num2str(year(datebounds(1,:))))
 else
     scatter(predicTIONS, prices_lagged_endhour(:,4))
+    lsline
+    xlabel('Predictions')
+    ylabel('Actuals')
+    title(num2str(year(datebounds(1,:))))
 end
 
 reg_pred = fitlm(predicTIONS, prices_endhour(:,4))
+
+
 
     

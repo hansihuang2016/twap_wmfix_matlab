@@ -21,9 +21,14 @@ workingdir = ...
 
 %% Pull and extract FX data
 
+currency = 'EURUSD' %ALLCAPS please
+
+year = '2007'
+
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2007_cleaned.csv'));
+    csvread(strcat(workingdir,...
+        'DAT_ASCII_',currency,'_M1_',year,'_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
