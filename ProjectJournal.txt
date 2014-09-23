@@ -282,3 +282,15 @@ Tried a number of different alternatives:
 *************
 
 So a lot has happened since I last wrote in this journal. After taking the difference between the TWAP and the 11am prices, all of the problems of autocorrelation, heteroscedasticity, covariance stationarity go away.
+
+
+*************
+* 9/22/2014 *
+*************
+
+Stopping for lunch. Need to line up dates in prediction_analysis... not sure why the dates are not being synchronized across series there...
+
+
+I think that I need to line up the equities dates (t-1) with the FX dates (t). Then I need to make sure I figure out what the hell is going on...getting very strange numbers.
+
+

@@ -112,23 +112,23 @@ prices_equities_open = fts2mat(prices_equities_open_ts);
 %%Take logs of prices to make them comparable to FX data...
 %%%%%%%%%%%%%%%%%%
 if takelogs == 1
-    prices_equities_adjclose = log(prices_equities_adjclose);
-    prices_equities_open = log(prices_equities_open);
+    prices_equities_adjclose_log = log(prices_equities_adjclose);
+    prices_equities_open_log = log(prices_equities_open);
 end
 
 %create the timestamp
 time = [endhour endminute 00];
-equitiestime_prices = repmat(time, size(prices_equities_adjclose,1), 1);
+equitiestime_prices = repmat(time, size(prices_equities_adjclose_log,1), 1);
 
 %add the timestamp
-prices_equities_adjclose = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_adjclose];
+prices_equities_adjclose_log = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
+    prices_equities_adjclose_log];
 prices_equities_open = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
     prices_equities_open];
 
 %reconvert to time series object
-prices_equities_adjclose_ts = fints(datenum(prices_equities_adjclose(:,1:6)),...
-    prices_equities_adjclose(:,7:size(prices_equities_adjclose,2)), names_equities);
+prices_equities_adjclose_log_ts = fints(datenum(prices_equities_adjclose_log(:,1:6)),...
+    prices_equities_adjclose_log(:,7:size(prices_equities_adjclose_log,2)), names_equities);
 prices_equities_open_ts = fints(datenum(prices_equities_open(:,1:6)),...
     prices_equities_open(:,7:size(prices_equities_open,2)), names_equities);
 
@@ -242,7 +242,7 @@ if twapdecision == 1
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-prices_equities_adjclose_ts = prices_equities_adjclose_ts(datestr(common_datenums_all));
+prices_equities_adjclose_log_ts = prices_equities_adjclose_log_ts(datestr(common_datenums_all));
 prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
 
 %clearing up variables for mem reasons
@@ -258,10 +258,10 @@ prices_starthour = fts2mat(prices_starthour_ts);
 %% Doing the lagging and lining up of variables
 
 %Lagging equities adj close by 1 period
-prices_equities_adjclose_ts_lagged = ...
-    lagts(prices_equities_adjclose_ts,lagperiod,NaN);
-prices_equities_adjclose_lagged = ...
-    fts2mat(prices_equities_adjclose_ts_lagged);
+prices_equities_adjclose_log_ts_lagged = ...
+    lagts(prices_equities_adjclose_log_ts,lagperiod,NaN);
+prices_equities_adjclose_log_lagged = ...
+    fts2mat(prices_equities_adjclose_log_ts_lagged);
 
 % prices_equities_adjclose_ds_lagged1 = ...
 %     mat2dataset(prices_equities_adjclose_ts_lagged1);
@@ -272,8 +272,8 @@ prices_equities_adjclose_lagged = ...
 %day's FX values
 
 %removing the first 'NaN' value in the lagged equities data
-prices_equities_adjclose_lagged = ...
-    prices_equities_adjclose_lagged(lagperiod+1:size(prices_equities_adjclose_lagged,1),:);
+prices_equities_adjclose_log_lagged = ...
+    prices_equities_adjclose_log_lagged(lagperiod+1:size(prices_equities_adjclose_log_lagged,1),:);
 
 
 %removing the first day of the year for the FX values so that we can use 
@@ -286,21 +286,21 @@ if twapdecision == 1
 end
 
 %converting non-lagged values to use in regression
-prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
+prices_equities_adjclose_log = fts2mat(prices_equities_adjclose_log_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
 
 %% Taking first differences and lining things up
 
 %Taking first differences of the RHS variables
-prices_equities_adjclose_ts_lagged_d1 = ...
-    diff(prices_equities_adjclose_ts_lagged);
+prices_equities_adjclose_log_ts_lagged_d1 = ...
+    diff(prices_equities_adjclose_log_ts_lagged);
 
-prices_equities_adjclose_lagged_d1 = ...
-    fts2mat(prices_equities_adjclose_ts_lagged_d1);
+prices_equities_adjclose_log_lagged_d1 = ...
+    fts2mat(prices_equities_adjclose_log_ts_lagged_d1);
 
 %removing the first 'NaN' value in the lagged equities data
-prices_equities_adjclose_lagged_d1 = ...
-    prices_equities_adjclose_lagged_d1(2:size(prices_equities_adjclose_lagged_d1,1),:);
+prices_equities_adjclose_log_lagged_d1 = ...
+    prices_equities_adjclose_log_lagged_d1(2:size(prices_equities_adjclose_log_lagged_d1,1),:);
 
 %Now removing the second day of the year for the FX values so that we can 
 % use the lagged AND first-differenced equity values as predictors 
@@ -323,7 +323,7 @@ if twapdecision == 1
         depvar = [num2str(starthour) 'to' num2str(endhour) ...
             'TWAP_minus_11amfix_' num2str(year(1))];
 
-        reg1 = stepwiselm(prices_equities_adjclose, prices_diff(:,4), ...
+        reg1 = stepwiselm(prices_equities_adjclose_log, prices_diff(:,4), ...
             'VarNames',[names_equities' depvar])
     else
         %running the regression with TWAP - 11am prices as response var and
@@ -331,7 +331,7 @@ if twapdecision == 1
         depvar = [num2str(starthour) 'to' num2str(endhour) ...
             'TWAP_minus_11amfix_' num2str(year(1))];
         
-        reg1 = stepwiselm(prices_equities_adjclose_lagged, ...
+        reg1 = stepwiselm(prices_equities_adjclose_log_lagged, ...
             prices_lagged_diff(:,4), ...
             'VarNames',[names_equities' depvar])
     end
@@ -354,7 +354,7 @@ else
                     num2str(endhour) num2str(endminute) '_'...
                     num2str(year(1))];
 
-                reg1 = stepwiselm(prices_equities_adjclose_lagged_d1, ...
+                reg1 = stepwiselm(prices_equities_adjclose_log_lagged_d1, ...
                 prices_lagged_d1_endhour(:,4), ...
                 'VarNames',[names_equities' depvar])
             else        
@@ -363,7 +363,7 @@ else
                     num2str(endminute) '_'...
                     num2str(year(1))];
 
-                reg1 = stepwiselm(prices_equities_adjclose_lagged, ...
+                reg1 = stepwiselm(prices_equities_adjclose_log_lagged, ...
                 prices_lagged_endhour(:,4), ...
                 'VarNames',[names_equities' depvar])
             end
@@ -377,7 +377,7 @@ else
         %running regression on unlagged equity/unlagged FX
         depvar = [num2str(endhour) num2str(endminute) 'minus' ...
             num2str(starthour) num2str(endminute) '_' num2str(year(1))];
-        reg1 = stepwiselm(prices_equities_adjclose, prices_diff(:,4),...
+        reg1 = stepwiselm(prices_equities_adjclose_log, prices_diff(:,4),...
             'VarNames',[names_equities' depvar])
     end
 end
@@ -395,7 +395,7 @@ end
 % predictors_ts = extfield(prices_equities_adjclose_ts_lagged, ...
 %     reg1.PredictorNames);
 
-predictors_ts = extfield(prices_equities_adjclose_ts, ...
+predictors_ts = extfield(prices_equities_adjclose_log_ts_lagged, ...
     reg1.PredictorNames);
 
 %creating a separate variable for the NAMES of all the predictor variables
@@ -427,7 +427,7 @@ for jj = 1:size(coeff_names,2)
 %         getfirst = extfield(prices_equities_adjclose_ts_lagged, ...
 %             firstterm);
 
-        getfirst = extfield(prices_equities_adjclose_ts, ...
+        getfirst = extfield(prices_equities_adjclose_log_ts, ...
             firstterm);
         
         
@@ -438,7 +438,7 @@ for jj = 1:size(coeff_names,2)
 %             secondterm);
 
 % NOT QUITE SURE WHY I LAGGED THIS HERE
-        getsecond = extfield(prices_equities_adjclose_ts, ...
+        getsecond = extfield(prices_equities_adjclose_log_ts, ...
             secondterm);
         
         %create the interaction variable

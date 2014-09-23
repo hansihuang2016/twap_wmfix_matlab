@@ -4,13 +4,20 @@ close all
 load reg1.mat
 % load reg1_d1.mat
 
+%% Do you want to run a lagged regression?
+% this lags equities by number of days specified by lagperiod 
+
+lagperiod = 1 %set number of days you want to lag equities here
+%%
+
+
 %% Set working directory
 workingdir = ...
     '/Users/arnavsheth/Documents/Research/AdamDuncan/Matlab/Data/';
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2011_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
@@ -20,14 +27,18 @@ prices_all_ts = fints(datenum(prices_all(:,1:6)),prices_all(:,7:10),fx_names);
 %Extract start and end dates for equities extraction
 datebounds = ftsbound(prices_all_ts,2);
 
+
+
+
+
 %% MOVING ON TO THE EQUITIES STUFF NOW
 %% Download equities data to get trading dates for equities. 
 %   We will use these to get the dates for our FX data
 
-tickers_americas = {'^MERV', '^MXX', '^BVSP', '^GSPTSE', '^GSPC', 'DOW',...
+tickers_americas = {'^MERV', '^MXX', '^BVSP', '^GSPTSE', '^GSPC',...
     '^RUT'};
 names_americas = {'BuenosAires', 'Mexico', 'SaoPaulo', 'Toronto',...
-    'SandP500', 'DowJones', 'Russell2000'};
+    'SandP500', 'Russell2000'};
 
 tickers_europe = {'^ATX', '^BFX', '^FCHI', '^GDAXI', '^SSMI', '^FTSE'};
 names_europe = {'Vienna', 'Brussels', 'Paris', 'Frankfurt', 'Swiss',...
@@ -83,8 +94,6 @@ connect = yahoo
     end
 close(connect)
 
-prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
-
 clear ii equities_tmp_ts
 
 %% Specify start- and end-hour here
@@ -131,13 +140,27 @@ datebounds = ftsbound(prices_all_ts,2);
 
 %% Data extraction for Equities
 
-%get the series of the equities datenums
+%get the series of all of the datenums and matching up equities with the 
+%FX dates
 datenums_equities_prices = getfield(prices_equities_adjclose_ts,'dates');
-datevec_equities_prices = datevec(datenums_equities_prices);
+
+datenums_endhour = getfield(prices_endhour_ts,'dates');
+datenums_starthour = getfield(prices_starthour_ts,'dates');
+datenums_fx = intersect(datenums_endhour, datenums_starthour, 'rows');
+
+common_datenums_all = intersect(datenums_fx, datenums_equities_prices,...
+    'rows');
+
+datevec_prices = datevec(common_datenums_all);
 
 %%Now extracting from the end-hour prices only the days for which the datenums 
 %%series is the smallest
-prices_endhour_ts = prices_endhour_ts(datestr(datenums_equities_prices));
+prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
+prices_equities_adjclose_ts = ...
+    prices_equities_adjclose_ts(datestr(common_datenums_all));
+
+prices_equities_open_ts = ...
+    prices_equities_open_ts(datestr(common_datenums_all));
 
 %Adding a timestamp to the equities time series because Matlab does not
 %behave well without that timestamp...
@@ -146,22 +169,35 @@ prices_endhour_ts = prices_endhour_ts(datestr(datenums_equities_prices));
 prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
 prices_equities_open = fts2mat(prices_equities_open_ts);
 
+prices_equities_adjclose_log = log(prices_equities_adjclose);
+prices_equities_open_log = log(prices_equities_open);
+
 %create the timestamp
 time = [endhour endminute 00];
 
 equitiestime_prices = repmat(time, size(prices_equities_adjclose,1), 1);
 
 %add the timestamp
-prices_equities_adjclose = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_adjclose];
-prices_equities_open = [datevec_equities_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_open];
+prices_equities_adjclose_log = [datevec_prices(:,1:3) equitiestime_prices ... 
+    prices_equities_adjclose_log];
+prices_equities_open_log = [datevec_prices(:,1:3) equitiestime_prices ... 
+    prices_equities_open_log];
 
 %reconvert to time series object
-prices_equities_adjclose_ts = fints(datenum(prices_equities_adjclose(:,1:6)),...
-    prices_equities_adjclose(:,7:size(prices_equities_adjclose,2)), names_equities);
-prices_equities_open_ts = fints(datenum(prices_equities_open(:,1:6)),...
-    prices_equities_open(:,7:size(prices_equities_open,2)), names_equities);
+prices_equities_adjclose_log_ts = fints(datenum(prices_equities_adjclose_log(:,1:6)),...
+    prices_equities_adjclose_log(:,7:size(prices_equities_adjclose_log,2)), names_equities);
+prices_equities_open_log_ts = fints(datenum(prices_equities_open_log(:,1:6)),...
+    prices_equities_open_log(:,7:size(prices_equities_open_log,2)), names_equities);
+
+prices_equities_adjclose_log_ts_lagged = ...
+    lagts(prices_equities_adjclose_log_ts,lagperiod,NaN);
+prices_equities_adjclose_log_lagged = ...
+    fts2mat(prices_equities_adjclose_log_ts_lagged);
+
+%removing the first 'NaN' value in the lagged equities data
+prices_equities_adjclose_log_lagged = ...
+    prices_equities_adjclose_log_lagged(lagperiod+1:size(prices_equities_adjclose_log_lagged,1),:);
+
 
 %clearing vars for mem reasons
 clear datevec_equities
@@ -175,7 +211,7 @@ clear datevec_equities
 
 %creating a times series of *just* the predictor variables that have come 
 %out of the stepwise regression (NOT including interaction terms)
-predictors_ts = extfield(prices_equities_adjclose_ts, ...
+predictors_ts = extfield(prices_equities_adjclose_log_ts_lagged, ...
     reg1.PredictorNames);
 
 %creating a separate variable for the NAMES of all the predictor variables
@@ -202,11 +238,11 @@ for jj = 1:size(coeff_names,2)
         secondterm = strtmp(k+1:size(strtmp,2));
         %extract *first* term from the main time series object containing 
         %ALL lagged equities data
-        getfirst = extfield(prices_equities_adjclose_ts, ...
+        getfirst = extfield(prices_equities_adjclose_log_ts_lagged, ...
             firstterm);
         %extract *second* term from the main time series object containing 
         %ALL lagged equities data
-        getsecond = extfield(prices_equities_adjclose_ts, ...
+        getsecond = extfield(prices_equities_adjclose_log_ts_lagged, ...
             secondterm);
         %create the interaction variable
         interac = getfirst.*getsecond;
