@@ -286,8 +286,8 @@ if twapdecision == 1
 end
 
 %converting non-lagged values to use in regression
-prices_equities_adjclose_log = fts2mat(prices_equities_adjclose_log_ts);
-prices_equities_open = fts2mat(prices_equities_open_ts);
+% prices_equities_adjclose_log = fts2mat(prices_equities_adjclose_log_ts);
+% prices_equities_open = fts2mat(prices_equities_open_ts);
 
 %% Taking first differences and lining things up
 
