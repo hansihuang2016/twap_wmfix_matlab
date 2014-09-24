@@ -360,6 +360,51 @@ for jj = 1:size(coeff_names,2)
 end
 clear idx strtmp firstterm secondterm getfirst getsecond interac        
 
+
+%Using the same technique as above to add the power terms to the predictors 
+%time series by using the fact that Matlab spits out power terms using a
+%carat('^')...this is terribly inefficient but it gets the job done
+for jj = 1:size(coeff_names,2)
+    %get an index value for the position of the colon (':') if it exists.
+    %if it does not exist then k will be null
+    k = strfind(coeff_names{jj},'^');
+    %check that k is not null (this means we have an interaction term)
+    if isequal(k,'') == 0
+        %create a separate variable since coeff_names is a cell array
+        strtmp = coeff_names{jj};
+        
+        %replace the colon with an underscore ('_') because time series
+        %object names cannot contain any other symbol
+        strtmp(k) = '_';
+        
+        %get the first interaction term
+        term = strtmp(1:k-1);
+        
+        %get the second interaction term
+        power = strtmp(k+1:size(strtmp,2));
+        
+        %extract the term from the main time series object containing 
+        %ALL lagged equities data
+
+        getterm = extfield(prices_equities_adjclose_log_ts_lagged, ...
+            term);
+
+        %raise it to the appropriate power
+        quadrat = getterm.^str2num(power);
+        
+        %by default it gets named from the first variable so need to change
+        %the name...
+        quadrat = chfield(quadrat, strtmp(1:k-1), strtmp);
+        
+        %merging it with the time series of predictor variables
+        predictors_ts = merge(predictors_ts, quadrat);
+    end
+    clear idx strtmp term getterm quadrat  power
+end
+clear idx strtmp term getterm quadrat power
+
+
+
 if differencingdecision == 1
     %first-differencing the independent variables
     predictors_d1_ts = diff(predictors_ts);
@@ -387,9 +432,9 @@ end
 
 %Get predictions
 if differencingdecision == 0
-    predicTIONS = coeffs'*predictors';
+    predicTIONS = predictors*coeffs;
 else
-    predicTIONS = coeffs'*predictors_d1';
+    predicTIONS = predictors_d1*coeffs;
 end
 
 %Get actuals
@@ -421,6 +466,6 @@ end
 
 reg_pred = fitlm(predicTIONS, prices_lagged_diff(:,4))
 
-mape = errperf(predicTIONS', prices_lagged_diff(:,4), 'mape')
+mape = errperf(predicTIONS, prices_lagged_diff(:,4), 'mape')
 
     

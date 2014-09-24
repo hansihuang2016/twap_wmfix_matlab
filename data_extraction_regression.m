@@ -23,12 +23,29 @@ workingdir = ...
 
 currency = 'EURUSD' %ALLCAPS please
 
-year = '2007'
+startyear = 2007
+endyear = 2009
 
-%Get Downloaded Histdata.com FX Data
+yearvector = startyear:endyear;
+
+
 prices_all = ...
     csvread(strcat(workingdir,...
+        'DAT_ASCII_',currency,'_M1_',num2str(startyear),'_cleaned.csv'));
+for jj = 2:size(yearvector,2)
+    %% Pull and extract initial data
+    
+    year = num2str(yearvector(jj));
+
+    %Get Downloaded Histdata.com FX Data
+    tmp = ...
+        csvread(strcat(workingdir,...
         'DAT_ASCII_',currency,'_M1_',year,'_cleaned.csv'));
+    
+    prices_all = vertcat(prices_all, tmp);  
+    clear tmp
+end
+clear tmp
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 

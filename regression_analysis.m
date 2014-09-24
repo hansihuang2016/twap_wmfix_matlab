@@ -25,17 +25,10 @@ lagdecision = 1 %1 = yes; 0 = no
 
 lagperiod = 1 %set number of days you want to lag equities here
 
-%% Do you want to regress RETURNS (as opposed to prices)?
-
-returndecision = 0 %1 = yes; 0 = no
-
 %% Do you want to calculate the TWAP between the start- and the end-hour?
 
 twapdecision = 1 %1 = yes; 0 = no
 
-%% Do you want to take first differences of the equity values?
-
-differencingdecision = 0 %1 = yes; 0 = no
 
 %% Specify start- and end-hour here
 
@@ -111,10 +104,9 @@ prices_equities_open = fts2mat(prices_equities_open_ts);
 %%%%%%%%%%%%%%%%%%
 %%Take logs of prices to make them comparable to FX data...
 %%%%%%%%%%%%%%%%%%
-if takelogs == 1
-    prices_equities_adjclose_log = log(prices_equities_adjclose);
-    prices_equities_open_log = log(prices_equities_open);
-end
+prices_equities_adjclose_log = log(prices_equities_adjclose);
+prices_equities_open_log = log(prices_equities_open);
+
 
 %create the timestamp
 time = [endhour endminute 00];
@@ -225,25 +217,25 @@ common_datenums_all = intersect(datenums_fx, datenums_equities_prices,...
 
 %Now that we have the common dates, let's make everything match up to those
 %dates
-% prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
-% prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
+prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
+prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
 prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CREATING TWAP RESPONSE VARIABLE HERE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if twapdecision == 1
-    prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
-    prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
-    %Converting to matrix for creating logical var
-    prices_diff = fts2mat(prices_diff_ts);
-    prices_diff_logical = prices_diff > 0;
-    prices_diff_logical = prices_diff_logical(:,4);
-end
+
+prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
+prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
+% prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
+
+prices_diff = fts2mat(prices_diff_ts);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-prices_equities_adjclose_log_ts = prices_equities_adjclose_log_ts(datestr(common_datenums_all));
-prices_equities_open_ts = prices_equities_open_ts(datestr(common_datenums_all));
+prices_equities_adjclose_log_ts = ...
+    prices_equities_adjclose_log_ts(datestr(common_datenums_all));
+
 
 %clearing up variables for mem reasons
 clear missingdates datenums_hourly datenums_endhour rowidx_nan...
@@ -263,13 +255,11 @@ prices_equities_adjclose_log_ts_lagged = ...
 prices_equities_adjclose_log_lagged = ...
     fts2mat(prices_equities_adjclose_log_ts_lagged);
 
-% prices_equities_adjclose_ds_lagged1 = ...
-%     mat2dataset(prices_equities_adjclose_ts_lagged1);
-
-
-%lining up the one-period lagged equities and removing the last period 
+%%%
+%Lining up the one-period lagged equities and removing the last period 
 %of end-hour prices to line up previous day equity prices with current 
 %day's FX values
+%%%
 
 %removing the first 'NaN' value in the lagged equities data
 prices_equities_adjclose_log_lagged = ...
@@ -281,106 +271,44 @@ prices_equities_adjclose_log_lagged = ...
 %corresponding to t-period fx value)
 prices_lagged_endhour = prices_endhour(lagperiod+1:size(prices_endhour,1),:);
 prices_lagged_starthour = prices_starthour(lagperiod+1:size(prices_starthour,1),:);
-if twapdecision == 1
-    prices_lagged_diff = prices_diff(lagperiod+1:size(prices_diff,1),:);
+
+prices_lagged_diff = prices_diff(lagperiod+1:size(prices_diff,1),:);
+
+
+%%%FOR LOGIT%%%
+%%%
+%Creating a nominal variable here to categorize when the TWAP is greater
+%than the fix or vice versa 
+%%%
+
+for ii = 1:size(prices_lagged_diff,1)
+    if prices_lagged_diff(ii,4) > 0
+        prices_lagged_diff_logical(ii) = 2;
+    else
+        prices_lagged_diff_logical(ii) = 1;
+    end
 end
 
-%converting non-lagged values to use in regression
-% prices_equities_adjclose_log = fts2mat(prices_equities_adjclose_log_ts);
-% prices_equities_open = fts2mat(prices_equities_open_ts);
-
-%% Taking first differences and lining things up
-
-%Taking first differences of the RHS variables
-prices_equities_adjclose_log_ts_lagged_d1 = ...
-    diff(prices_equities_adjclose_log_ts_lagged);
-
-prices_equities_adjclose_log_lagged_d1 = ...
-    fts2mat(prices_equities_adjclose_log_ts_lagged_d1);
-
-%removing the first 'NaN' value in the lagged equities data
-prices_equities_adjclose_log_lagged_d1 = ...
-    prices_equities_adjclose_log_lagged_d1(2:size(prices_equities_adjclose_log_lagged_d1,1),:);
-
-%Now removing the second day of the year for the FX values so that we can 
-% use the lagged AND first-differenced equity values as predictors 
-
-prices_lagged_d1_endhour = ...
-    prices_endhour(2:size(prices_lagged_endhour,1),:);
-prices_lagged_d1_starthour = ...
-    prices_starthour(2:size(prices_lagged_starthour,1),:);
-
-
-%% TAKING LOGS OF FX VALUES HERE
-% prices_lagged_diff = log(prices_lagged_diff);
+%%%
 
 
 %% Stepwise regression on Close of End-Hour FX and Adj Close of equities
 if endminute == 0 endminute = '00'; end
-if twapdecision == 1
-    if lagdecision == 0
-        %running the regression with TWAP - 11am prices as response var
-        depvar = [num2str(starthour) 'to' num2str(endhour) ...
-            'TWAP_minus_11amfix_' num2str(year(1))];
 
-        reg1 = stepwiselm(prices_equities_adjclose_log, prices_diff(:,4), ...
-            'VarNames',[names_equities' depvar])
-    else
-        %running the regression with TWAP - 11am prices as response var and
-        %LAGGED (by one day) equity values on the RHS
-        depvar = [num2str(starthour) 'to' num2str(endhour) ...
-            'TWAP_minus_11amfix_' num2str(year(1))];
-        
-        reg1 = stepwiselm(prices_equities_adjclose_log_lagged, ...
-            prices_lagged_diff(:,4), ...
-            'VarNames',[names_equities' depvar])
-    end
-else
-    if lagdecision == 1
-        %running the regression on lagged equity/unlagged FX
-        if returndecision == 1 
-            %running the regression on JUST lagged RETURNS/unlagged FX
-            depvar = ['L' num2str(lagperiod) 'Returns_' num2str(endhour) ...
-                num2str(endminute) '_' num2str(year(1))];
+%running the regression with TWAP - 11am prices as response var and
+%LAGGED (by one day) equity values on the RHS
 
-            reg1 = stepwiselm(returns_equities_adjclose_lagged, ...
-            prices_lagged_diff(:,4), ...
-            'VarNames',[names_equities' depvar])
-        else
-            if differencingdecision == 1
-                %running the regression on lagged AND first-differenced equity
-                %VALUES/unlagged FX
-                depvar = ['L' num2str(lagperiod) 'D1Prices_' ...
-                    num2str(endhour) num2str(endminute) '_'...
-                    num2str(year(1))];
+depvar = [num2str(starthour) 'to' num2str(endhour) ...
+    'TWAP_minus_11amfix_' num2str(year(1))];
 
-                reg1 = stepwiselm(prices_equities_adjclose_log_lagged_d1, ...
-                prices_lagged_d1_endhour(:,4), ...
-                'VarNames',[names_equities' depvar])
-            else        
-                %running the regression on JUST lagged equity VALUES
-                depvar = ['L' num2str(lagperiod) 'Prices_' num2str(endhour) ...
-                    num2str(endminute) '_'...
-                    num2str(year(1))];
+% depvar = [num2str(starthour) 'am_minus_11amfix_' num2str(year(1))];
 
-                reg1 = stepwiselm(prices_equities_adjclose_log_lagged, ...
-                prices_lagged_endhour(:,4), ...
-                'VarNames',[names_equities' depvar])
-            end
-        end
 
-    %     reg4 = stepwiselm(prices_equities_adjclose_lagged1, ...
-    %         prices_lagged_starthour(:,4), ...
-    %         'VarNames',[names_equities 'StartHourPrices'])
+reg1 = stepwiselm(prices_equities_adjclose_log_lagged, ...
+    prices_lagged_diff(:,4), 'interactions', ...
+    'VarNames',[names_equities' depvar])
 
-    else
-        %running regression on unlagged equity/unlagged FX
-        depvar = [num2str(endhour) num2str(endminute) 'minus' ...
-            num2str(starthour) num2str(endminute) '_' num2str(year(1))];
-        reg1 = stepwiselm(prices_equities_adjclose_log, prices_diff(:,4),...
-            'VarNames',[names_equities' depvar])
-    end
-end
+
 %% Creating a separate time series object with the variables (including 
 % interaction terms) that have been used in the stepwise regression
 
@@ -390,10 +318,6 @@ end
 
 %creating a times series of *just* the predictor variables that have come 
 %out of the stepwise regression (NOT including interaction terms)
-
-% NOT QUITE SURE WHY I LAGGED THIS HERE
-% predictors_ts = extfield(prices_equities_adjclose_ts_lagged, ...
-%     reg1.PredictorNames);
 
 predictors_ts = extfield(prices_equities_adjclose_log_ts_lagged, ...
     reg1.PredictorNames);
@@ -413,45 +337,83 @@ for jj = 1:size(coeff_names,2)
     if isequal(k,'') == 0
         %create a separate variable since coeff_names is a cell array
         strtmp = coeff_names{jj};
+        
         %replace the colon with an underscore ('_') because time series
         %object names cannot contain any other symbol
         strtmp(k) = '_';
+        
         %get the first interaction term
         firstterm = strtmp(1:k-1);
+        
         %get the second interaction term
         secondterm = strtmp(k+1:size(strtmp,2));
+        
         %extract *first* term from the main time series object containing 
         %ALL lagged equities data
-
-% NOT QUITE SURE WHY I LAGGED THIS HERE
-%         getfirst = extfield(prices_equities_adjclose_ts_lagged, ...
-%             firstterm);
-
-        getfirst = extfield(prices_equities_adjclose_log_ts, ...
+        getfirst = extfield(prices_equities_adjclose_log_ts_lagged, ...
             firstterm);
-        
         
         %extract *second* term from the main time series object containing 
         %ALL lagged equities data
-
-%         getsecond = extfield(prices_equities_adjclose_ts_lagged, ...
-%             secondterm);
-
-% NOT QUITE SURE WHY I LAGGED THIS HERE
-        getsecond = extfield(prices_equities_adjclose_log_ts, ...
+        getsecond = extfield(prices_equities_adjclose_log_ts_lagged, ...
             secondterm);
         
         %create the interaction variable
         interac = getfirst.*getsecond;
+        
         %by default it gets named from the first variable so need to change
         %the name...
         interac = chfield(interac, strtmp(1:k-1), strtmp);
+        
         %merging it with the time series of predictor variables
         predictors_ts = merge(predictors_ts, interac);
     end
     clear idx strtmp firstterm secondterm getfirst getsecond interac
 end
 clear idx strtmp firstterm secondterm getfirst getsecond interac        
+
+%Using the same technique as above to add the power terms to the predictors 
+%time series by using the fact that Matlab spits out power terms using a
+%carat('^')...this is terribly inefficient but it gets the job done
+for jj = 1:size(coeff_names,2)
+    %get an index value for the position of the colon (':') if it exists.
+    %if it does not exist then k will be null
+    k = strfind(coeff_names{jj},'^');
+    %check that k is not null (this means we have an interaction term)
+    if isequal(k,'') == 0
+        %create a separate variable since coeff_names is a cell array
+        strtmp = coeff_names{jj};
+        
+        %replace the colon with an underscore ('_') because time series
+        %object names cannot contain any other symbol
+        strtmp(k) = '_';
+        
+        %get the first interaction term
+        term = strtmp(1:k-1);
+        
+        %get the second interaction term
+        power = strtmp(k+1:size(strtmp,2));
+        
+        %extract the term from the main time series object containing 
+        %ALL lagged equities data
+
+        getterm = extfield(prices_equities_adjclose_log_ts_lagged, ...
+            term);
+
+        %raise it to the appropriate power
+        quadrat = getterm.^str2num(power);
+        
+        %by default it gets named from the first variable so need to change
+        %the name...
+        quadrat = chfield(quadrat, strtmp(1:k-1), strtmp);
+        
+        %merging it with the time series of predictor variables
+        predictors_ts = merge(predictors_ts, quadrat);
+    end
+    clear idx strtmp term getterm quadrat  power
+end
+clear idx strtmp term getterm quadrat power
+
 
 %converting it to non-ts obj to use in regression
 predictors = fts2mat(predictors_ts);
@@ -488,45 +450,11 @@ end
 
 %This is a check to see that our linear multivariate regression matches up
 %with the stepwise regression
-if lagdecision == 1
-    if twapdecision == 1
-        reg1_lm = fitlm(predictors_lagged, prices_lagged_diff(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    else
-        reg1_lm = fitlm(predictors_lagged, prices_lagged_endhour(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    end
-else
-    if twapdecision == 1
-        reg1_lm = fitlm(predictors, prices_diff(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    else
-        reg1_lm = fitlm(predictors, prices_endhour(:,4), ...
-        'VarNames',[names_predictors' depvar])
-    end
-end
 
-%% Taking first-differences and lining things up
+reg1_lm = fitlm(predictors_lagged, prices_lagged_diff(:,4), ...
+'VarNames',[names_predictors' depvar])
 
-% %First-differencing the predictors
-% predictors_d1_ts = diff(predictors_ts);
-% 
-% %Converting to non-FTS to remove that first 'NaN'
-% predictors_d1 = fts2mat(predictors_d1_ts);
-% predictors_d1 = predictors_d1(2:size(predictors_d1,1),:);
-% 
-% %Running regression on first-differenced variables
-% depvar = ['L1D1Prices_' num2str(endhour) num2str(endminute) '_'...
-%            num2str(year(1))];
-% reg1_d1 = fitlm(predictors_d1, prices_lagged_d1_endhour(:,4), ...
-%     'VarNames',[names_predictors' depvar])
 
-% i10test(predictors_d1, 'itest', 'adf', 'iparams', I, 'stest', 'kpss', ...
-%         'iparams', S, 'VarNames', names_predictors', 'numDiffs', 1)
-
-    
-% save predictors_d1_ts.mat predictors_d1_ts
-% save reg1_d1.mat reg1_d1
 
 save predictors_ts.mat predictors_ts
 save reg1.mat reg1
