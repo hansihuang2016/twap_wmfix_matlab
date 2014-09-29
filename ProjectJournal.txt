@@ -294,3 +294,12 @@ Stopping for lunch. Need to line up dates in prediction_analysis... not sure why
 I think that I need to line up the equities dates (t-1) with the FX dates (t). Then I need to make sure I figure out what the hell is going on...getting very strange numbers.
 
 
+*************
+* 9/23/2014 *
+*************
+
+Two main things to do:
+
+(1) Think of a transformation for equities to make them more "similar" to diff because diff is 10^-3 and ln(equities) are 7-10.
+(2) Perhaps run logit and use significant predictors from there to regress and predict...?
+

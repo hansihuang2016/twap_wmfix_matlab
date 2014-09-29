@@ -23,8 +23,8 @@ workingdir = ...
 
 currency = 'EURUSD' %ALLCAPS please
 
-startyear = 2007
-endyear = 2009
+startyear = 2013
+endyear = 2013
 
 yearvector = startyear:endyear;
 
@@ -85,14 +85,14 @@ connect = yahoo
     equities_tmp = fetch(connect, tickers_equities(1),'Adj Close',...
             datebounds(1,:),datebounds(2,:),'d'); 
 
-    prices_equities_adjclose_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
+    prices_equities_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
         names_equities(1));
         
-    equities_tmp = fetch(connect, tickers_equities(1),'Open',...
-            datebounds(1,:),datebounds(2,:),'d');
+%     equities_tmp = fetch(connect, tickers_equities(1),'Open',...
+%             datebounds(1,:),datebounds(2,:),'d');
     
-    prices_equities_open_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
-        names_equities(1));
+%     prices_equities_open_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
+%         names_equities(1));
 close(connect)
 
 %connecting to yahoo! to get equities info
@@ -106,7 +106,7 @@ connect = yahoo
         %converting to FTS object
         equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
             names_equities(ii));
-        prices_equities_adjclose_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
+        prices_equities_ts = merge(prices_equities_ts, equities_tmp_ts,...
             'DateSetMethod', 'intersection');
         
         %creating a temporary vector for the yahoo download for OPEN
@@ -115,13 +115,13 @@ connect = yahoo
         %converting to FTS object
         equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
             names_equities(ii));
-        prices_equities_open_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
-            'DateSetMethod', 'intersection');                
+%         prices_equities_open_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
+%             'DateSetMethod', 'intersection');                
     end
 close(connect)
 
-save prices_equities_open_ts.mat prices_equities_open_ts
-save prices_equities_adjclose_ts.mat prices_equities_adjclose_ts
+% save prices_equities_open_ts.mat prices_equities_open_ts
+save prices_equities_ts.mat prices_equities_ts
 
 
 

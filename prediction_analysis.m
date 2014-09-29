@@ -17,7 +17,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2007_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 
@@ -59,14 +59,14 @@ connect = yahoo
     equities_tmp = fetch(connect, tickers_equities(1),'Adj Close',...
             datebounds(1,:),datebounds(2,:),'d'); 
 
-    prices_equities_adjclose_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
+    prices_equities_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
         names_equities(1));
         
     equities_tmp = fetch(connect, tickers_equities(1),'Open',...
             datebounds(1,:),datebounds(2,:),'d');
     
-    prices_equities_open_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
-        names_equities(1));
+%     prices_equities_open_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
+%         names_equities(1));
 close(connect)
 
 %connecting to yahoo! to get equities info
@@ -80,17 +80,17 @@ connect = yahoo
         %converting to FTS object
         equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
             names_equities(ii));
-        prices_equities_adjclose_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
+        prices_equities_ts = merge(prices_equities_ts, equities_tmp_ts,...
             'DateSetMethod', 'intersection');
         
         %creating a temporary vector for the yahoo download for OPEN
-        equities_tmp = fetch(connect, tickers_equities(ii),'Open',...
-            datebounds(1,:),datebounds(2,:),'d');        
+%         equities_tmp = fetch(connect, tickers_equities(ii),'Open',...
+%             datebounds(1,:),datebounds(2,:),'d');        
         %converting to FTS object
-        equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
-            names_equities(ii));
-        prices_equities_open_ts = merge(prices_equities_adjclose_ts, equities_tmp_ts,...
-            'DateSetMethod', 'intersection');                
+%         equities_tmp_ts = fints(equities_tmp(:,1),equities_tmp(:,2),...
+%             names_equities(ii));
+%         prices_equities_open_ts = merge(prices_equities_ts, equities_tmp_ts,...
+%             'DateSetMethod', 'intersection');                
     end
 close(connect)
 
@@ -225,7 +225,7 @@ prices_TWAP_ts = fints(datenum(prices_TWAP(:,1:6)), ...
 
 %get the series of all of the datenums and matching up equities with the 
 %FX dates
-datenums_equities_prices = getfield(prices_equities_adjclose_ts,'dates');
+datenums_equities_prices = getfield(prices_equities_ts,'dates');
 
 datenums_endhour = getfield(prices_endhour_ts,'dates');
 datenums_starthour = getfield(prices_starthour_ts,'dates');
@@ -239,60 +239,60 @@ datevec_prices = datevec(common_datenums_all);
 %%Now extracting from the end-hour prices only the days for which the datenums 
 %%series is the smallest
 prices_endhour_ts = prices_endhour_ts(datestr(common_datenums_all));
-prices_equities_adjclose_ts = ...
-    prices_equities_adjclose_ts(datestr(common_datenums_all));
+prices_equities_ts = ...
+    prices_equities_ts(datestr(common_datenums_all));
 
-prices_equities_open_ts = ...
-    prices_equities_open_ts(datestr(common_datenums_all));
+% prices_equities_open_ts = ...
+%     prices_equities_open_ts(datestr(common_datenums_all));
 
 %Adding a timestamp to the equities time series because Matlab does not
 %behave well without that timestamp...
 
 %convert to non-FTS object
-prices_equities_adjclose = fts2mat(prices_equities_adjclose_ts);
-prices_equities_open = fts2mat(prices_equities_open_ts);
+prices_equities = fts2mat(prices_equities_ts);
+
 
 %take logs of equities
-prices_equities_adjclose_log = log(prices_equities_adjclose);
-prices_equities_open_log = log(prices_equities_open);
+prices_equities_log = log(prices_equities);
+
 
 %create the timestamp to eventually convert back to FINTS
-equitiestime_prices = repmat(time, size(prices_equities_adjclose,1), 1);
+equitiestime_prices = repmat(time, size(prices_equities,1), 1);
 
 %add the timestamp
-prices_equities_adjclose_log = [datevec_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_adjclose_log];
-prices_equities_open_log = [datevec_prices(:,1:3) equitiestime_prices ... 
-    prices_equities_open_log];
+prices_equities_log = [datevec_prices(:,1:3) equitiestime_prices ... 
+    prices_equities_log];
+% prices_equities_open_log = [datevec_prices(:,1:3) equitiestime_prices ... 
+%     prices_equities_open_log];
 
 %reconvert to time series object
-prices_equities_adjclose_log_ts = fints(datenum(prices_equities_adjclose_log(:,1:6)),...
-    prices_equities_adjclose_log(:,7:size(prices_equities_adjclose_log,2)), names_equities);
-prices_equities_open_log_ts = fints(datenum(prices_equities_open_log(:,1:6)),...
-    prices_equities_open_log(:,7:size(prices_equities_open_log,2)), names_equities);
+prices_equities_log_ts = fints(datenum(prices_equities_log(:,1:6)),...
+    prices_equities_log(:,7:size(prices_equities_log,2)), names_equities);
+% prices_equities_open_log_ts = fints(datenum(prices_equities_open_log(:,1:6)),...
+%     prices_equities_open_log(:,7:size(prices_equities_open_log,2)), names_equities);
 
 %adding a lag
-prices_equities_adjclose_log_ts_lagged = ...
-    lagts(prices_equities_adjclose_log_ts,lagperiod,NaN);
+prices_equities_log_ts_lagged = ...
+    lagts(prices_equities_log_ts,lagperiod,NaN);
 
 %converting to matrix to remove that first 'NaN'
-prices_equities_adjclose_log_lagged = ...
-    fts2mat(prices_equities_adjclose_log_ts_lagged);
+prices_equities_log_lagged = ...
+    fts2mat(prices_equities_log_ts_lagged);
 
 %removing the first 'NaN' value in the lagged equities data
-prices_equities_adjclose_log_lagged = ...
-    prices_equities_adjclose_log_lagged(lagperiod+1:size(prices_equities_adjclose_log_lagged,1),:);
+prices_equities_log_lagged = ...
+    prices_equities_log_lagged(lagperiod+1:size(prices_equities_log_lagged,1),:);
 
 %AGAIN create the timestamp to eventually convert back to FINTS
-equitiestime_prices = repmat(time, size(prices_equities_adjclose_log_lagged,1), 1);
+equitiestime_prices = repmat(time, size(prices_equities_log_lagged,1), 1);
 
 %AGAIN add the timestamp
-prices_equities_adjclose_log_lagged = [datevec_prices(2:size(datevec_prices,1),1:3) equitiestime_prices ... 
-    prices_equities_adjclose_log_lagged];
+prices_equities_log_lagged = [datevec_prices(2:size(datevec_prices,1),1:3) equitiestime_prices ... 
+    prices_equities_log_lagged];
 
 %AGAIN reconvert to time series object
-prices_equities_adjclose_log_ts_lagged = fints(datenum(prices_equities_adjclose_log_lagged(:,1:6)),...
-    prices_equities_adjclose_log_lagged(:,7:size(prices_equities_adjclose_log_lagged,2)), names_equities);
+prices_equities_log_ts_lagged = fints(datenum(prices_equities_log_lagged(:,1:6)),...
+    prices_equities_log_lagged(:,7:size(prices_equities_log_lagged,2)), names_equities);
 
 %clearing vars for mem reasons
 clear datevec_equities
@@ -315,7 +315,7 @@ prices_diff = fts2mat(prices_diff_ts);
 
 %creating a times series of *just* the predictor variables that have come 
 %out of the stepwise regression (NOT including interaction terms)
-predictors_ts = extfield(prices_equities_adjclose_log_ts_lagged, ...
+predictors_ts = extfield(prices_equities_log_ts_lagged, ...
     reg1.PredictorNames);
 
 %creating a separate variable for the NAMES of all the predictor variables
@@ -342,11 +342,11 @@ for jj = 1:size(coeff_names,2)
         secondterm = strtmp(k+1:size(strtmp,2));
         %extract *first* term from the main time series object containing 
         %ALL lagged equities data
-        getfirst = extfield(prices_equities_adjclose_log_ts_lagged, ...
+        getfirst = extfield(prices_equities_log_ts_lagged, ...
             firstterm);
         %extract *second* term from the main time series object containing 
         %ALL lagged equities data
-        getsecond = extfield(prices_equities_adjclose_log_ts_lagged, ...
+        getsecond = extfield(prices_equities_log_ts_lagged, ...
             secondterm);
         %create the interaction variable
         interac = getfirst.*getsecond;
@@ -386,7 +386,7 @@ for jj = 1:size(coeff_names,2)
         %extract the term from the main time series object containing 
         %ALL lagged equities data
 
-        getterm = extfield(prices_equities_adjclose_log_ts_lagged, ...
+        getterm = extfield(prices_equities_log_ts_lagged, ...
             term);
 
         %raise it to the appropriate power
