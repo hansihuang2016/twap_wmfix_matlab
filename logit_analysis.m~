@@ -189,8 +189,8 @@ prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
-prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
-% prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
+% prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
+prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
 
 prices_diff = fts2mat(prices_diff_ts);
 
@@ -216,14 +216,7 @@ prices_starthour = fts2mat(prices_starthour_ts);
 prices_equities_log_ts_lagged = ...
     lagts(prices_equities_log_ts,lagperiod,NaN);
 
-%%%%
-%Taking first-differences
-prices_equities_log_ts_lagged_d1 = ...
-    diff(prices_equities_log_ts_lagged);
-prices_equities_log_lagged_d1 = ...
-    fts2mat(prices_equities_log_ts_lagged_d1);
-%%%%
-
+%Converting to non-FINTS for reorg
 prices_equities_log_lagged = ...
     fts2mat(prices_equities_log_ts_lagged);
 
@@ -252,12 +245,15 @@ prices_lagged_diff = prices_diff(lagperiod+1:size(prices_diff,1),:);
 %%%
 %Creating a nominal variable here to categorize when the TWAP is greater
 %than the fix or vice versa 
+%(Recall that prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;)
 %%%
 
 for ii = 1:size(prices_lagged_diff,1)
     if prices_lagged_diff(ii,4) > 0
+        %TWAP greater than 11am
         prices_lagged_diff_logical(ii) = 2;
     else
+        %11am greater than TWAP
         prices_lagged_diff_logical(ii) = 1;
     end
 end
@@ -284,21 +280,21 @@ depvar = [num2str(starthour) 'to' num2str(endhour) ...
 % interaction and power terms.
 % "Why?" you ask? Because I'm curious. That's why.
 
-idx = find(stats.p(2:size(stats.p,1)) < .1);
-names_logit = names_equities(idx);
-
-
-predictors_logit_ts = extfield(prices_equities_log_ts_lagged, ...
-    names_logit);
-
-predictors_logit = fts2mat(predictors_logit_ts);
-
-predictors_lagged_logit = ...
-    predictors_logit(lagperiod+1:size(predictors_logit,1),:);
-
-reg2_logit = stepwiselm(predictors_lagged_logit, ...
-    prices_lagged_diff(:,4), 'quadratic', ...
-    'VarNames',[names_logit' depvar])
+% idx = find(stats.p(2:size(stats.p,1)) < .1);
+% names_logit = names_equities(idx);
+% 
+% 
+% predictors_logit_ts = extfield(prices_equities_log_ts_lagged, ...
+%     names_logit);
+% 
+% predictors_logit = fts2mat(predictors_logit_ts);
+% 
+% predictors_lagged_logit = ...
+%     predictors_logit(lagperiod+1:size(predictors_logit,1),:);
+% 
+% reg2_logitvars = stepwiselm(predictors_lagged_logit, ...
+%     prices_lagged_diff(:,4), 'quadratic', ...
+%     'VarNames',[names_logit' depvar])
 
 save B.mat B
 save stats.mat stats

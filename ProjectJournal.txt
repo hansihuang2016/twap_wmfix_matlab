@@ -303,3 +303,10 @@ Two main things to do:
 (1) Think of a transformation for equities to make them more "similar" to diff because diff is 10^-3 and ln(equities) are 7-10.
 (2) Perhaps run logit and use significant predictors from there to regress and predict...?
 
+
+*************
+* 9/30/2014 *
+*************
+
+-So finally got the logit to work. What works best in predicting 2014 so far? (1) Using 2013 data with 10am price minus 11am price (not TWAP).
+-Next steps would be to create more detail in choosing dates for training data.
