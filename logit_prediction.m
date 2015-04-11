@@ -237,9 +237,12 @@ prices_starthour_ts = prices_starthour_ts(datestr(common_datenums_all));
 prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
 % prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
-prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
+prices_diff_ts = prices_starthour_ts - prices_11amfix_ts;
 
 prices_diff = fts2mat(prices_diff_ts);
+prices_starthour = fts2mat(prices_starthour_ts);
+prices_11amfix = fts2mat(prices_11amfix_ts);
+prices_TWAP = fts2mat(prices_TWAP_ts);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -248,16 +251,30 @@ prices_diff = fts2mat(prices_diff_ts);
 %lagged equities data lines up with the FX data
 prices_lagged_diff = prices_diff(lagperiod+1:size(prices_diff,1),:);
 
+%Also doing it for the other variables because we will need them later on
+%to calculate returns, etc.
+prices_lagged_starthour = prices_starthour(lagperiod+1:size(prices_diff,1),:);
+prices_lagged_11amfix = prices_11amfix(lagperiod+1:size(prices_diff,1),:);
+prices_TWAP = prices_TWAP(lagperiod+1:size(prices_diff,1),:);
+
+
+
+%%%%%%%%% CREATING NOMINAL VARIABLE HERE
 %Creating a nominal variable here to categorize when the TWAP is greater
 %than the fix or vice versa 
-%(Recall that prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;)
-%%%
+%
+%Recall that:
+%EITHER
+%prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts 
+%OR
+%prices_diff_ts = prices_starthour_ts - prices_11amfix_ts;)
+%%%%%%%%%%
 for ii = 1:size(prices_lagged_diff,1)
     if prices_lagged_diff(ii,4) > 0
-        %TWAP greater than 11am
+        %TWAP (or starthour) greater than 11am
         prices_lagged_diff_logical(ii) = 2;
     else
-        %11am greater than TWAP
+        %11am greater than TWAP (or starthour)
         prices_lagged_diff_logical(ii) = 1;
     end
 end
@@ -289,7 +306,7 @@ prices_equities_log_lagged = ...
 pihat = mnrval(B, prices_equities_log_lagged);
 pihat = [pihat prices_lagged_diff(:,4)];
 
-% THIRD we want to put dates on the probabilities
+
 
 %Knock the first date entry off (since it's lagged)
 datenums_lagged_equities_prices = ... 
@@ -301,11 +318,23 @@ pihat_ts = fints(datenums_lagged_equities_prices, pihat, names, 'DAILY');
 clear names
 
 %% CHECK ACCURACY (FINALLY!)
-
+profits = zeros(size(pihat,1),1);
+returns = zeros(size(pihat,1),1);
 for ii = 1:size(pihat,1)
     if pihat(ii,1) > .5
+        %Recall that: 
+        %prices_diff_ts = prices_starthour_ts - prices_11amfix_ts
+        %This means that the model is predicting 11am to be greater.
+        profits(ii) = -prices_lagged_diff(ii,4);
+        returns(ii) = profits(ii)/prices_lagged_starthour(ii,4);
         check(ii) = 1;
-    else check(ii) = 2;
+    else
+        %Recall that: 
+        %prices_diff_ts = prices_starthour_ts - prices_11amfix_ts
+        %This means that the model is predicting the starthour price to be greater.
+        profits(ii) = prices_lagged_diff(ii,4);
+        returns(ii) = profits(ii)/prices_lagged_11amfix(ii,4);
+        check(ii) = 2;
     end
 end
 clear ii

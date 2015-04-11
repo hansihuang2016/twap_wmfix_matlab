@@ -17,7 +17,7 @@ workingdir = ...
 
 %Get Downloaded Histdata.com FX Data
 prices_all = ...
-    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2007_cleaned.csv'));
+    csvread(strcat(workingdir,'DAT_ASCII_EURUSD_M1_2014_cleaned.csv'));
 
 fx_names = {'Open'; 'High'; 'Low'; 'Close'};
 

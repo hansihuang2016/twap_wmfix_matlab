@@ -190,7 +190,7 @@ prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
 % prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
-prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
+prices_diff_ts = prices_starthour_ts - prices_11amfix_ts;
 
 prices_diff = fts2mat(prices_diff_ts);
 

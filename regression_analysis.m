@@ -222,7 +222,7 @@ prices_11amfix_ts = prices_11amfix_ts(datestr(common_datenums_all));
 
 prices_TWAP_ts = prices_TWAP_ts(datestr(common_datenums_all));
 prices_diff_ts = prices_TWAP_ts - prices_11amfix_ts;
-% prices_diff_ts = prices_11amfix_ts - prices_starthour_ts;
+% prices_diff_ts = prices_starthour_ts - prices_11amfix_ts;
 
 prices_diff = fts2mat(prices_diff_ts);
 
@@ -467,21 +467,31 @@ reg1_lm = fitlm(predictors_lagged, prices_lagged_diff(:,4), ...
 [B,dev,stats] = ...
     mnrfit(prices_equities_log_lagged, prices_lagged_diff_logical)
 
-idx = find(stats.p(2:size(stats.p,1)) < .1);
-names_logit = names_equities(idx);
+%% Running a stepwise regression on the predictors that are found 
+% significant to a 0.1 level from the logit. The stepwise reg includes
+% interaction and power terms.
+% "Why?" you ask? Because I'm curious. That's why.
 
-predictors_logit_ts = extfield(prices_equities_log_ts_lagged, ...
-    names_logit);
+% idx = find(stats.p(2:size(stats.p,1)) < .1);
+% names_logit = names_equities(idx);
+% 
+% predictors_logit_ts = extfield(prices_equities_log_ts_lagged, ...
+%     names_logit);
+% 
+% predictors_logit = fts2mat(predictors_logit_ts);
+% 
+% predictors_lagged_logit = ...
+%     predictors_logit(lagperiod+1:size(predictors_logit,1),:);
+% 
+% reg2_logit = stepwiselm(predictors_lagged_logit, ...
+%     prices_lagged_diff(:,4), 'quadratic', ...
+%     'VarNames',[names_logit' depvar])
 
-predictors_logit = fts2mat(predictors_logit_ts);
-
-predictors_lagged_logit = ...
-    predictors_logit(lagperiod+1:size(predictors_logit,1),:);
-
-reg2_logit = stepwiselm(predictors_lagged_logit, ...
-    prices_lagged_diff(:,4), 'quadratic', ...
-    'VarNames',[names_logit' depvar])
-
+%saving regression details
 save predictors_ts.mat predictors_ts
 save reg1.mat reg1
+
+%saving logit details
+save B.mat B
+save stats.mat stats
 

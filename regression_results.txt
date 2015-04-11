@@ -487,3 +487,59 @@ Number of observations: 87, Error degrees of freedom: 85
 Root Mean Squared Error: 0.0127
 R-squared: 0.000349,  Adjusted R-Squared -0.0114
 F-statistic vs. constant model: 0.0297, p-value = 0.864
+
+
+
+
+*************
+* 10/3/2014 *
+*************
+
+
+
+Linear regression model:
+    10to11TWAP_minus_11amfix_2013 ~ [Linear formula with 9 terms in 8 predictors]
+
+Estimated Coefficients:
+                   Estimate     SE           tStat      pValue   
+    (Intercept)       3.1306       1.2053     2.5974     0.010434
+    Australia       0.017348    0.0065307     2.6564    0.0088488
+    BuenosAires     0.005081    0.0017908     2.8373    0.0052524
+    Jakarta         0.008258    0.0026862     3.0742    0.0025543
+    Korea          -0.016234    0.0072447    -2.2408     0.026671
+    Mexico         -0.014331    0.0043113     -3.324    0.0011424
+    NewZealand     -0.037036     0.010109    -3.6636    0.0003562
+    Nikkei225       -0.59235      0.25079    -2.3619      0.01961
+    Nikkei225_2     0.031292     0.013152     2.3792     0.018748
+
+
+Number of observations: 144, Error degrees of freedom: 135
+Root Mean Squared Error: 0.00106
+R-squared: 0.133,  Adjusted R-Squared 0.0819
+F-statistic vs. constant model: 2.59, p-value = 0.0114
+
+
+*************
+* 10/6/2014 *
+*************
+
+
+Using TWAP to predict 2014
+--------------------------
+2007	51.3%
+2008	51.3%
+2009	48.7%
+2010	48.7%
+2011	48.7%
+2012	50.43%
+2013	49.57%
+
+Using Starthour to predict 2014
+-------------------------------
+2007	46.09%
+2008	45.22%
+2009	45.22%
+2010	53.91%
+2011	46.09%
+2012	53.91%
+2013	55.65%
